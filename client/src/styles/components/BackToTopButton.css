@@ -1,0 +1,29 @@
+/* BackToTopButton.css */
+.back-to-top-button {
+  align-items: center;
+  background-color: #007bff;
+  border-radius: 50%;
+  border: none;
+  bottom: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  font-size: 1.5rem;
+  height: 50px;
+  justify-content: center;
+  position: fixed;
+  right: 20px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  width: 50px;
+  z-index: 1000;
+}
+
+.back-to-top-button:hover {
+  background-color: #0056b3;
+  transform: translateY(-3px);
+}
+
+.back-to-top-button:active {
+  transform: translateY(0);
+}

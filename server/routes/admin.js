@@ -4,6 +4,7 @@ const router = express.Router();
 const authController = require("../controllers/authController");
 const photocardController = require("../controllers/photocardController");
 const reportController = require("../controllers/reportController");
+const verificationController = require("../controllers/verificationController");
 const { adminOnly } = require("../middleware/adminOnly");
 const { authenticateToken } = require("../middleware/authMiddleware");
 
@@ -42,6 +43,24 @@ router.put(
 router.put(
   "/photocards/:id/unflag-duplicate",
   photocardController.unflagDuplicate
+);
+
+// --- VERIFICATION ADMIN ROUTES ---
+router.get(
+  "/verifications/pending",
+  verificationController.getPendingVerifications
+);
+router.get(
+  "/verifications/:verificationId",
+  verificationController.getVerificationById
+);
+router.put(
+  "/verifications/:verificationId/approve",
+  verificationController.approveVerification
+);
+router.put(
+  "/verifications/:verificationId/reject",
+  verificationController.rejectVerification
 );
 
 // --- USER ADMIN ROUTES ---

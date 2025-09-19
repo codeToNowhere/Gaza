@@ -1,0 +1,259 @@
+/* Photocard.css */
+
+/* --- Photocard Wrapper & Base --- */
+
+/* Wrapper: allows the clickable area and flag to be grouped together */
+.photocard-wrapper {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  margin: 1rem;
+}
+
+.photocard {
+  align-items: center;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  outline: none;
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  width: 100%;
+}
+
+.photocard:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  transform: scale(1.03);
+}
+
+.photocard:focus,
+.photocard:focus-visible {
+  outline: 3px solid #007bff;
+  outline-offset: 3px;
+}
+
+/* Container for image and status label */
+.photocard-container {
+  border-radius: 10px 10px 0 0;
+  border: 10px solid transparent;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 350px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+/* Image styling */
+.photocard-container img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+  width: 100%;
+}
+
+.image-placeholder {
+  align-items: "center";
+  background: "#f0f0f0";
+  display: "flex";
+  height: "350px";
+  justify-content: "center";
+  width: "100%";
+}
+
+/* Border color classes (from photoStatus.js) */
+.border-released {
+  border-color: #006400;
+}
+.border-deceased {
+  border-color: #000000;
+}
+.border-missing {
+  border-color: #8b0000;
+}
+.border-detained {
+  border-color: #ff9800;
+}
+
+/* Status label  */
+.photocard-label {
+  align-items: center;
+  color: #fff;
+  display: flex;
+  flex-shrink: 0;
+  font-size: 1rem;
+  font-weight: bold;
+  height: 40px;
+  justify-content: center;
+  margin-top: -40px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Background color classes for the photo label (from photoStatus.js)*/
+.label-released {
+  background-color: #006400;
+}
+.label-deceased {
+  background-color: #000000;
+}
+.label-missing {
+  background-color: #8b0000;
+}
+.label-detained {
+  background-color: #ff9800;
+}
+
+/* --- Other UI Elements --- */
+
+.photocard-name {
+  align-items: center;
+  box-sizing: border-box;
+  color: #333;
+  display: flex;
+  flex-grow: 1;
+  font-size: 1rem;
+  font-weight: bold;
+  justify-content: center;
+  padding: 10px 20px;
+  text-align: center;
+  width: 100%;
+}
+
+/* Hover prompt for bio click */
+.photocard-prompt {
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 5px;
+  bottom: 10px;
+  color: #fff;
+  font-size: 0.85rem;
+  left: 50%;
+  opacity: 0;
+  padding: 5px 10px;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-50%);
+  transition: opacity 0.3s ease-in-out;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.photocard:hover .photocard-prompt {
+  opacity: 1;
+}
+
+/* Flag Toggle Button */
+.flag-toggle-button {
+  align-items: center;
+  align-self: center;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  color: #555;
+  cursor: pointer;
+  display: flex;
+  font-size: 0.9em;
+  font-weight: bold;
+  gap: 5px;
+  margin-top: 10px;
+  padding: 5px 10px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  width: fit-content;
+}
+
+.flag-toggle-button:hover:not(:disabled) {
+  background-color: #e0e0e0;
+  border-color: #999;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+/* flagged state */
+.flag-toggle-button.flagged {
+  background-color: #d9534f;
+  border-color: #d9534f;
+  box-shadow: 0 2px 5px rgba(220, 53, 69, 0.4);
+  color: #fff;
+  cursor: not-allowed;
+  font-weight: bold;
+}
+
+.flag-toggle-button.flagged:hover {
+  background-color: #c9302c;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.flag-toggle-button:active {
+  transform: translateY(1px);
+}
+
+/* --- Owner Status Indicators --- */
+
+/* Base styles  */
+.flagged-indicator,
+.blocked-indicator {
+  align-items: center;
+  border-radius: 4px;
+  border: 1px solid;
+  box-sizing: border-box;
+  display: flex;
+  font-size: 0.8em;
+  font-weight: bold;
+  gap: 5px;
+  justify-content: center;
+  padding: 4px 8px;
+  text-align: center;
+  width: 100%;
+}
+
+.owner-status-indicators {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 10px;
+  padding: 0 10px;
+  width: 100%;
+}
+
+/* Flagged Indicator */
+.flagged-indicator {
+  background-color: #fceceb;
+  border-color: #e74c3c;
+  color: #c0392b;
+}
+
+.flagged-indicator .flag-icon {
+  color: #e74c3c;
+}
+
+/* Blocked Indicator  */
+.blocked-indicator {
+  background-color: #ebdcf5;
+  border-color: #8e44ad;
+  color: #8e44ad;
+}
+
+.blocked-indicator .blocked-icon {
+  color: #8e44ad;
+}
+
+.flag-reason-detail {
+  color: #555;
+  font-size: 0.9em;
+  font-weight: normal;
+  margin-left: 5px;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

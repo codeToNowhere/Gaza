@@ -1,0 +1,295 @@
+/* UploadForm.css */
+
+/* --- Container --- */
+.upload-form {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 30px auto;
+  max-width: 500px;
+  padding: 30px;
+}
+
+.form-title {
+  color: #810a0a;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* --- Form Group Labels --- */
+.upload-form .form-group label {
+  color: #555;
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* Require Field Asterisk */
+.upload-form .form-group label span[aria-hidden="true"] {
+  color: #dc3545;
+  font-size: 0.9em;
+  margin-left: 4px;
+}
+
+/* --- Input Fields (Text, Date, File, Select, Textarea) --- */
+.upload-form input[type="file"],
+.upload-form textarea,
+.upload-form input[type="text"],
+.upload-form select,
+.upload-form input[type="date"] {
+  background-color: #f8f8f8;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  color: #333;
+  font-size: 1rem;
+  padding: 0.8rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+}
+
+.upload-form input[type="file"] {
+  padding: 0.5rem 0.8rem;
+}
+
+/* Focus Styles for inputs/selects/textareas */
+.upload-form input[type="file"]:focus,
+.upload-form textarea:focus,
+.upload-form input[type="text"]:focus,
+.upload-form select:focus,
+.upload-form input[type="date"]:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+  outline: none;
+}
+
+/* Disabled States */
+.upload-form input:disabled,
+.upload-form select:disabled,
+.upload-form textarea:disabled {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* --- Image Upload & Preview --- */
+.upload-image-container {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.image-preview-wrapper {
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  display: block;
+  height: 150px;
+  margin: 1rem auto 0 auto;
+  position: relative;
+  width: 150px;
+}
+
+.small-preview {
+  border-radius: 8px;
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+/* --- Remove Image Button --- */
+.remove-image-btn {
+  align-items: center;
+  background: #dc3545;
+  border-radius: 50%;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  font-size: 1.3rem;
+  height: 28px;
+  justify-content: center;
+  position: absolute;
+  right: -8px;
+  top: -8px;
+  transition: background-color 0.2s;
+  width: 28px;
+  z-index: 2;
+}
+
+.remove-image-btn:hover,
+.remove-image-btn:focus {
+  background-color: #c82333;
+  outline: none;
+}
+
+/* --- General Form Buttons (e.g. Submit) --- */
+.upload-form button[type="submit"] {
+  align-items: center;
+  background-color: #007bff;
+  border-radius: 5px;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  font-size: 1.1rem;
+  font-weight: bold;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 2rem;
+  padding: 1rem;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  width: 100%;
+}
+
+.upload-form button[type="submit"]:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.upload-form button[type="submit"]:not(:disabled):hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+/* --- Condition Buttons --- */
+.condition-buttons-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: flex-start;
+  margin-top: 0.5rem;
+}
+
+.condition-button {
+  background-color: #fff;
+  border-radius: 5px;
+  border: 1px solid #007bff;
+  color: #007bff;
+  cursor: pointer;
+  flex-basis: auto;
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 0.8rem 1.2rem;
+  transition: all 0.2s ease-in-out;
+  user-select: none;
+}
+
+/* Hover/Focus for UNSELECTED buttons */
+.condition-button:hover:not(:disabled),
+.condition-button:focus:not(:disabled) {
+  background-color: #e6f2ff;
+  border-color: #0056b3;
+  outline: none;
+}
+
+/* Selected State */
+.condition-button.selected {
+  background-color: #007bff;
+  border-color: #007bff;
+  box-shadow: 0 2px 5px rgba(0, 123, 255, 0.25);
+  color: #fff;
+}
+
+/* Hover/Focus for SELECTED buttons */
+.condition-button.selected:hover:not(:disabled),
+.condition-button.selected:focus:not(:disabled) {
+  background-color: #0056b3;
+  border-color: #0056b3;
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.condition-button:disabled {
+  background-color: #e9ecef;
+  border-color: #ccc;
+  color: #a0a0a0;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* --- Biography Textarea --- */
+.biography-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.biography-label {
+  color: #555;
+  font-weight: 600;
+}
+
+.biography-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.char-count {
+  color: #777;
+  font-size: 0.85rem;
+  margin-top: 0.3rem;
+  text-align: right;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  border-radius: 5px;
+  border: 1px solid #f5c6cb;
+  color: #dc3545;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  padding: 0.8rem;
+  text-align: center;
+}
+
+.success-message {
+  background-color: #d4edda;
+  border-radius: 5px;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+  .upload-form-container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+
+  .form-title {
+    font-size: 2rem;
+  }
+
+  .condition-buttons-container {
+    flex-direction: row;
+    gap: 0.5rem;
+    justify-content: space-around;
+  }
+
+  .condition-button {
+    flex-basis: 48%;
+    max-width: calc(50% - 0.25rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .condition-buttons-container {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .condition-button {
+    flex-basis: auto;
+    max-width: none;
+  }
+}

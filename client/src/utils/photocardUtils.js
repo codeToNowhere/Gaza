@@ -50,16 +50,18 @@ export const applyFilters = (
   photocards,
   selectedFilters,
   searchQuery,
-  showFlaggedDuplicates
+  showFlaggedDuplicates,
+  excludeUnidentified = false
 ) => {
   if (!Array.isArray(photocards)) {
-    console.warn(
-      "applyFilters: 'photocards' is not an array. Returning empty array."
-    );
     return [];
   }
 
-  return photocards.filter((photocards) => {
+  return photocards.filter((photocard) => {
+    if (excludeUnidentified && photocard.isUnidentified) {
+      return false;
+    }
+
     const matchesFilter =
       selectedFilters.length === 0 ||
       selectedFilters.includes(getStatusLabel(photocard));
@@ -82,4 +84,20 @@ export const applyFilters = (
 
     return matchesFilter && matchesSearch;
   });
+};
+
+// === FETCH IMAGE SOURCE ===
+export const getPhotocardImageSrc = (photocard) => {
+  if (!photocard || !photocard.image) {
+    return "/camera-placeholder.png";
+  }
+
+  if (
+    photocard.image.startsWith("data:image") ||
+    photocard.image.startsWith("http")
+  ) {
+    return photocard.image;
+  }
+
+  return `${import.meta.env.VITE_BACKEND_URL}/uploads/${photocard.image}`;
 };

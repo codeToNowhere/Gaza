@@ -22,7 +22,15 @@ const fs = require("fs");
 
 // --- PUBLIC ACTIONS ---
 const getAllPhotocards = catchAsync(async (req, res, next) => {
-  const photocards = await PhotoCard.find({ blocked: false })
+  const { excludeUnidentified } = req.query;
+
+  let query = { blocked: false };
+
+  // Only exclude unidentified if specifically requested
+  if (excludeUnidentified === "true") {
+    query.isUnidentified = false;
+  }
+  const photocards = await PhotoCard.find(query)
     .withCreatorDetails()
     .sort({ createdAt: -1 });
 
@@ -32,7 +40,7 @@ const getAllPhotocards = catchAsync(async (req, res, next) => {
   let totalCount = 0;
 
   photocards.forEach((photocard) => {
-    if (photocard.isConfirmedDuplicate) {
+    if (photocard.blocked || photocard.isConfirmedDuplicate) {
       return;
     }
 
@@ -42,7 +50,7 @@ const getAllPhotocards = catchAsync(async (req, res, next) => {
       missingCount++;
     } else if (condition === "deceased") {
       deceasedCount++;
-    } else {
+    } else if (condition === "detained") {
       detainedCount++;
     }
     totalCount++;
@@ -86,16 +94,16 @@ const getPhotocardById = catchAsync(async (req, res, next) => {
 });
 
 const checkExistingPhotocards = catchAsync(async (req, res, next) => {
-  const { name, age } = req.query;
+  const { name, age, months } = req.query;
 
   if (!name) {
     return next(new AppError("A name is required for this check.", 400));
   }
 
-  const query = duplicatePhotocardsQuery(name, age);
+  const query = duplicatePhotocardsQuery(name, age, months);
 
   const existingPhotocards = await PhotoCard.find(query).select(
-    "_id name age image biography"
+    "_id name age months image biography"
   );
 
   sendJsonResponse(res, 200, "Existing photocards checked successfully.", {
@@ -103,8 +111,8 @@ const checkExistingPhotocards = catchAsync(async (req, res, next) => {
   });
 });
 
-const getPotentialDuplicates = catchAsync(async (res, res, next) => {
-  const { name, age, currentPhotocardId } = req.query;
+const getPotentialDuplicates = catchAsync(async (req, res, next) => {
+  const { name, age, months, currentPhotocardId } = req.query;
 
   if (!name) {
     return next(
@@ -112,7 +120,7 @@ const getPotentialDuplicates = catchAsync(async (res, res, next) => {
     );
   }
 
-  let query = duplicatePhotocardsQuery(name, age);
+  let query = duplicatePhotocardsQuery(name, age, months);
 
   query.blocked = false;
 
@@ -125,7 +133,7 @@ const getPotentialDuplicates = catchAsync(async (res, res, next) => {
   }
 
   const photocards = await PhotoCard.find(query)
-    .select("_id name age image biography")
+    .select("_id name age months image biography")
     .sort({ createdAt: -1 });
 
   sendJsonResponse(res, 200, "Potential duplicates fetched successfully.", {
@@ -154,7 +162,7 @@ const createPhotocard = catchAsync(async (req, res, next) => {
     try {
       imageFilename = await handleImageUpload(req.file);
     } catch (err) {
-      return next(new AppError("Failed to process image:", 500, err));
+      return next(new AppError("Failed to process image.", 500, err));
     }
   }
 
@@ -285,19 +293,26 @@ const deletePhotocard = catchAsync(async (req, res, next) => {
 // --- Query Functions ---
 
 const getPhotocardCounts = catchAsync(async (req, res) => {
-  const [flaggedCount, blockedCount, duplicateCount, totalCount] =
-    await Promise.all([
-      PhotoCard.countDocuments({ flagged: true, blocked: false }),
-      PhotoCard.countDocuments({ blocked: true }),
-      PhotoCard.countDocuments({ isConfirmedDuplicate: true }),
-      PhotoCard.countDocuments({}),
-    ]);
+  const [
+    flaggedCount,
+    blockedCount,
+    duplicateCount,
+    unidentifiedCount,
+    totalCount,
+  ] = await Promise.all([
+    PhotoCard.countDocuments({ flagged: true, blocked: false }),
+    PhotoCard.countDocuments({ blocked: true }),
+    PhotoCard.countDocuments({ isConfirmedDuplicate: true }),
+    PhotoCard.countDocuments({ isUnidentified: true }),
+    PhotoCard.countDocuments({}),
+  ]);
 
   sendJsonResponse(res, 200, "Photocard counts fetched successfully.", {
     counts: {
       flagged: flaggedCount,
       blocked: blockedCount,
       duplicates: duplicateCount,
+      unidentified: unidentifiedCount,
       total: totalCount,
     },
   });

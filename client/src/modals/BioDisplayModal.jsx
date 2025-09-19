@@ -1,0 +1,122 @@
+// BioDisplayModal.jsx
+import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
+import { apiClient } from "../context/AuthContext";
+import { useMessage } from "../context/MessageContext";
+import Spinner from "../components/Spinner";
+import {
+  getStatusLabel,
+  getBorderClass,
+  getPhotocardImageSrc,
+} from "../utils/photocardUtils";
+import "../styles/modals/Modals.css";
+
+const BioDisplayModal = ({ isOpen, onClose, photocardId }) => {
+  const [photocard, setPhotocard] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { openMessage } = useMessage();
+
+  useEffect(() => {
+    if (isOpen && photocardId) {
+      setLoading(true);
+      setError(null);
+      const fetchPhotocard = async () => {
+        try {
+          const response = await apiClient.get(`/photocards/${photocardId}`);
+          if (response.data.success) {
+            setPhotocard(response.data.photocard);
+          } else {
+            setError(
+              response.data.message || "Failed to fetch photocard details."
+            );
+          }
+        } catch (err) {
+          const errorMessage =
+            err.response?.data?.message || err.message || "Failed to load bio.";
+          setError(errorMessage);
+          openMessage("Error", errorMessage, "error");
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchPhotocard();
+    }
+  }, [isOpen, photocardId, openMessage]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setPhotocard(null);
+      setLoading(true);
+      setError(null);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const imageSrc = getPhotocardImageSrc(photocard);
+  const status = photocard ? getStatusLabel(photocard) : "";
+  const borderClass = photocard ? getBorderClass(status) : "";
+
+  return (
+    <div className="modal-overlay bio-modal-overlay" onClick={onClose}>
+      <div
+        className="modal-content bio-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button className="modal-close-button" onClick={onClose}>
+          &times;
+        </button>
+        {loading ? (
+          <Spinner />
+        ) : error ? (
+          <p className="error-message">{error}</p>
+        ) : photocard ? (
+          <div className="bio-display-modal-content">
+            <img
+              src={imageSrc}
+              alt={`${photocard.name}`}
+              className={`bio-modal-image ${borderClass}`}
+            />
+            <h3 className="modal-title bio-username">{photocard.name}</h3>
+            {photocard.createdBy && photocard.createdBy.username && (
+              <p className="uploaded-by">
+                Uploaded by: <strong>{photocard.createdBy.username}</strong>{" "}
+                {photocard.createdBy.isBlocked && (
+                  <span className="blocked-user-tag"> (Blocked Account)</span>
+                )}
+              </p>
+            )}
+            {photocard.condition ? (
+              <p>
+                <strong>Condition:</strong> {photocard.condition}
+              </p>
+            ) : (
+              <p></p>
+            )}
+            <p>
+              <strong>Age: </strong>
+              {photocard.age}
+            </p>
+            <p>
+              <strong>Bio:</strong>
+            </p>
+            <p className="bio-text">
+              {photocard.biography || "No biogrpahy provided."}
+            </p>
+          </div>
+        ) : (
+          <p>Photocard details not available</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+BioDisplayModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  photocardId: PropTypes.string,
+};
+
+export default BioDisplayModal;

@@ -98,6 +98,9 @@ const login = catchAsync(async (req, res, next) => {
   if (rememberMe) {
     refreshTokenLifespan = authUtils.REFRESH_TOKEN_LIFESPAN_REMEMBER_ME;
     cookieMaxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
+  } else {
+    refreshTokenLifespan = authUtils.REFRESH_TOKEN_LIFESPAN_SESSION;
+    cookieMaxAge = 1 * 60 * 60 * 1000; // 1hr
   }
 
   const refreshToken = authUtils.generateToken(

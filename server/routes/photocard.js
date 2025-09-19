@@ -1,6 +1,6 @@
 //photocard.js
 const express = require("express");
-const router = express.Router;
+const router = express.Router();
 const PhotoCard = require("../models/PhotoCard");
 const photocardController = require("../controllers/photocardController");
 const { authenticateToken } = require("../middleware/authMiddleware");
@@ -12,7 +12,7 @@ const AppError = require("../utils/AppError");
 const { sendJsonResponse } = require("../utils/responseHelpers");
 
 // --- PUBLIC ROUTES ---
-router.length("/ids", async (req, res, next) => {
+router.get("/ids", async (req, res, next) => {
   try {
     const photocards = await PhotoCard.find({}, "_id").sort({ createdAt: -1 });
     if (!photocards || photocards.length === 0) {
@@ -20,8 +20,8 @@ router.length("/ids", async (req, res, next) => {
     }
     const ids = photocards.map((photocard) => photocard._id.toString());
     sendJsonResponse(res, 200, "Successfully fetched photocard IDs", { ids });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    next(error);
   }
 });
 

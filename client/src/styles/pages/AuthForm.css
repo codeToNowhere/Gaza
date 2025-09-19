@@ -1,0 +1,195 @@
+/* AuthForm.css  */
+
+/* --- Base Styles --- */
+
+/* Overall Page Container for Auth Forms */
+.auth-page-container {
+  align-items: center;
+  background-color: #e0e0e0;
+  box-sizing: border-box;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  min-height: 100%;
+  padding: 1.5rem;
+}
+
+/* Base style for the main form wrapper */
+.auth-form-wrapper {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 450px;
+  padding: 2.5rem;
+  width: 100%;
+}
+
+.auth-form-wrapper h2 {
+  color: #1a2e44;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+/* Form groups for inputs (text, email, password) */
+.auth-form-group {
+  margin-bottom: 1rem;
+}
+
+.auth-form-group label {
+  color: #555;
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* Combined styling for all text, email, and password inputs */
+.auth-form-group input[type="text"],
+.auth-form-group input[type="email"],
+.auth-form-group input[type="password"] {
+  background-color: #f8f8f8;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  color: #333;
+  font-size: 1rem;
+  padding: 0.8rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+}
+
+/* Inputs and buttons - disabled */
+.auth-form-group input:disabled,
+.auth-form-wrapper button:disabled {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Focus state for inputs */
+.auth-form-group input:focus {
+  border-color: #077bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+  outline: none;
+}
+
+/* Remember Me Checkbox */
+.remember-me-container {
+  align-items: center;
+  display: flex;
+  margin-bottom: 1rem;
+  margin-top: -0.5rem;
+}
+
+.remember-me-container input[type="checkbox"] {
+  margin-right: 0.5rem;
+  width: auto;
+}
+
+.remember-me-container label {
+  color: #333;
+  cursor: pointer;
+  font-weight: normal;
+  margin-bottom: 0;
+}
+
+/* --- Buttons & Links --- */
+
+/* Submit Button */
+.auth-form-wrapper button[type="submit"] {
+  background-color: #077bff;
+  border-radius: 5px;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-top: 0.5rem;
+  padding: 1rem;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  width: 100%;
+}
+
+.auth-form-wrapper button[type="submit"]:hover:not(:disabled) {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+/* Links (Sign Up, Forgot Password, Login) */
+.auth-links {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.auth-links a {
+  color: #077bff;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.auth-links a:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+/* --- Messages & Spinner --- */
+
+/* Combined styling for all message boxes */
+.message-box {
+  border-radius: 5px;
+  border: 1px solid;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  padding: 0.8rem;
+  text-align: center;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #dc3545;
+}
+
+.success-message {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+  color: #28a745;
+}
+
+/* Spinner Container */
+.auth-spinner-container {
+  align-items: center;
+  background-color: #e0e0e0;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 600px) {
+  .auth-form-wrapper {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+
+  .auth-form-wrapper h2 {
+    font-size: 1.8rem;
+  }
+
+  .auth-form-group input,
+  .auth-form-wrapper button {
+    font-size: 0.95rem;
+    padding: 0.7rem;
+  }
+
+  .auth-links {
+    font-size: 0.9rem;
+  }
+}

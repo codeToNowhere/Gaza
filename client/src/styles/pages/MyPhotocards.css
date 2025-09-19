@@ -1,0 +1,138 @@
+/* MyPhotocards.css */
+.my-photocards-page {
+  padding: 1.5rem;
+}
+
+.my-photocards-page h2 {
+  color: #810a0a;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.my-photocards-info {
+  color: #555;
+  font-size: 1.1rem;
+  margin-top: 2rem;
+  text-align: center;
+}
+
+/* Photocard Grid */
+.my-photocards-grid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  justify-content: center;
+  margin: 0 auto;
+  max-width: 1200px;
+  padding: 1rem;
+}
+
+/* Individual photocard item within the grid */
+.my-photocards-item {
+  align-items: center;
+  background-color: #2c3e50;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.my-photocards-item:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-5px);
+}
+
+.my-photocards-item .photo-card {
+  border-radius: 0;
+  box-shadow: none;
+  width: 100%;
+}
+
+/* Actions area below photo */
+.my-photocards-actions {
+  background-color: #2c3e50;
+  border-top: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  justify-content: center;
+  padding: 1rem;
+  width: 100%;
+}
+
+/* Base styles for action buttons */
+.my-photocards-actions button {
+  align-items: center;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  font-weight: bold;
+  justify-content: center;
+  margin: 10px auto;
+  padding: 0.75rem 1rem;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  white-space: nowrap;
+  width: 70%;
+}
+
+/* Edit button styling */
+.my-photocards-actions .edit-button {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.my-photocards-actions .edit-button:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+/* Delete button styling */
+.my-photocards-actions .delete-button {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.my-photocards-actions .delete-button:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+}
+
+.my-photocards-actions button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .my-photocards-page {
+    padding: 1rem;
+  }
+  .my-photocards-page h2 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  .my-photocards-grid {
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+  .my-photocards-actions {
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .my-photocards-page h2 {
+    font-size: 1.8rem;
+  }
+  .my-photocards-grid {
+    gap: 1rem;
+    padding: 0.5rem;
+  }
+}

@@ -1,6 +1,6 @@
 // usePhotocardData.js
 import { useState, useCallback, useEffect } from "react";
-import { apiClient, useAuth } from "./context/AuthContext";
+import { apiClient, useAuth } from "../context/AuthContext";
 
 export const usePhotocardData = () => {
   const [photocards, setPhotocards] = useState([]);
@@ -18,7 +18,12 @@ export const usePhotocardData = () => {
     setLoadingPhotocards(true);
     setError(null);
     try {
-      const response = await apiClient.get("/photocards");
+      const params = new URLSearchParams();
+      if (currentFilters.excludeUnidentified) {
+        params.append("excludeUnidentified", "true");
+      }
+
+      const response = await apiClient.get(`/photocards?${params.toString()}`);
       const { photocards: fetchedPhotocards, counts: fetchedCounts } =
         response.data;
 
@@ -38,7 +43,12 @@ export const usePhotocardData = () => {
         "An unexpected error occurred while fetching data.";
       setError(errorMessage);
       setPhotocards([]);
-      setCounts({ detained: 0, missing: 0, deceased: 0, total: 0 });
+      setCounts({
+        detained: 0,
+        missing: 0,
+        deceased: 0,
+        total: 0,
+      });
     } finally {
       setLoadingPhotocards(false);
     }

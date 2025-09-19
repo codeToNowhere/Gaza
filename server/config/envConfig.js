@@ -101,7 +101,7 @@ const getEmailPassword = () => {
     );
     return "dev_email_password_fallback";
   }
-  return user;
+  return password;
 };
 
 module.exports = {

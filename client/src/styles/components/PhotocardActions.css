@@ -1,0 +1,50 @@
+/* PhotocardActions.css */
+
+.photocard-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Button Base Styles  */
+.btn-base {
+  border-radius: 4px;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 8px 12px;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+/* Restore Button */
+.btn-restore {
+  background-color: #5cb85c;
+}
+.btn-restore:hover {
+  background-color: #449d44;
+}
+
+/* Block/Unblock Button */
+.btn-block {
+  background-color: #f0ad4e;
+}
+.btn-block.blocked {
+  background-color: #5bc0de;
+}
+.btn-block:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+/* Delete Button */
+.btn-delete {
+  background-color: #d9534f;
+}
+.btn-delete:hover {
+  background-color: #c9302c;
+}
+
+.photocard-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

@@ -2,7 +2,7 @@
 import { Routes, Route } from "react-router-dom";
 import { useMemo } from "react";
 import { useAuth } from "./context/AuthContext";
-import { usePhotocardData } from "./usePhotocardData";
+import { usePhotocardData } from "./hooks/usePhotocardData";
 import "./index.css";
 
 // Pages
@@ -22,7 +22,7 @@ import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Spinner from "./components/Spinner";
 
-export default function App() {
+const App = () => {
   const { user } = useAuth();
   const { photocards, loadingPhotocards, counts, error, refreshPhotocards } =
     usePhotocardData();
@@ -119,4 +119,6 @@ export default function App() {
       <Footer />
     </>
   );
-}
+};
+
+export default App;

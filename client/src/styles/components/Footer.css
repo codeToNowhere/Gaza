@@ -1,0 +1,14 @@
+/* Footer.css */
+.footer {
+  background-color: #000;
+  color: #fff;
+  font-size: 0.9rem;
+  height: 5rem;
+  padding: 1rem;
+  text-align: center;
+  transition: border-color 0.3s ease;
+}
+
+.footer:hover {
+  border-top-color: #b0362b;
+}
