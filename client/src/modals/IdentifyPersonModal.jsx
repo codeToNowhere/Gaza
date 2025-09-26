@@ -5,7 +5,8 @@ import {
   getInitialPhotocardFormData,
   handlePhotocardFormChange,
 } from "../utils/formDataUtils";
-import "../styles/modals/IdentifyPersonModal.css";
+import { getErrorMessage } from "../utils/getErrorMessage";
+import "../styles/modals/Modals.css";
 
 const IdentifyPersonModal = ({ photocard, isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState(
@@ -33,7 +34,7 @@ const IdentifyPersonModal = ({ photocard, isOpen, onClose, onSuccess }) => {
 
     try {
       const response = await apiClient.post(
-        `/photocards/${photocard._id}/identify`,
+        `/verifications/photocards/${photocard._id}/identify`,
         {
           name: formData.name,
           age: formData.age,
@@ -53,8 +54,10 @@ const IdentifyPersonModal = ({ photocard, isOpen, onClose, onSuccess }) => {
         onClose();
       }
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || "Failed to submit identification";
+      const errorMessage = getErrorMessage(
+        err,
+        "Failed to submit identification"
+      );
       openMessage("Error", errorMessage, "error");
     } finally {
       setIsSubmitting(false);
@@ -65,10 +68,10 @@ const IdentifyPersonModal = ({ photocard, isOpen, onClose, onSuccess }) => {
 
   return (
     <div className="modal-overlay">
-      <div className="identify-modal">
-        <div className="modal-header">
+      <div className="modal-content identify-modal">
+        <div className="modal-title">
           <h2>Identify This Person</h2>
-          <button className="close-button" onClick={onClose}>
+          <button className="modal-close-button" onClick={onClose}>
             &times;
           </button>
         </div>
@@ -129,7 +132,7 @@ const IdentifyPersonModal = ({ photocard, isOpen, onClose, onSuccess }) => {
               onChange={handleChange}
             >
               <option value="">Select condition</option>
-              <option value="detained">Detained</option>
+              <option value="injured">Injured</option>
               <option value="missing">Missing</option>
               <option value="deceased">Deceased</option>
             </select>
@@ -148,10 +151,19 @@ const IdentifyPersonModal = ({ photocard, isOpen, onClose, onSuccess }) => {
           </div>
 
           <div className="modal-actions">
-            <button type="button" onClick={onClose} disabled={isSubmitting}>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="modal-btn cancel-btn"
+            >
               Cancel
             </button>
-            <button type="submit" disabled={isSubmitting}>
+            <button
+              type="submit"
+              className="modal-btn confirm-btn"
+              disabled={isSubmitting}
+            >
               {isSubmitting ? "Submitting..." : "Submit Identification"}
             </button>
           </div>

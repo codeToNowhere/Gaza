@@ -5,6 +5,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useToast } from "../context/ToastContext";
 import { authApiClient } from "../context/AuthContext";
 import Spinner from "../components/Spinner";
+import { getErrorMessage } from "../utils/getErrorMessage";
 import "../styles/pages/AuthForm.css";
 
 const ResetPasswordPage = () => {
@@ -42,9 +43,10 @@ const ResetPasswordPage = () => {
         setIsTokenValid(true);
         showToast("Reset link is valid. Please set your new password.", "info");
       } catch (err) {
-        const errorMessage =
-          err.response?.data?.message ||
-          "The reset link is invalid or has expired. Please request a new one.";
+        const errorMessage = getErrorMessage(
+          err,
+          "The reset link is invalid or has expired. Please request a new one."
+        );
         setError(errorMessage);
         showToast(errorMessage, "error");
         setIsTokenValid(false);
@@ -84,9 +86,10 @@ const ResetPasswordPage = () => {
         navigate("/login");
       }, 3000);
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message ||
-        "Failed to reset password. The link might be invalid or expired. Please request a new one.";
+      const errorMessage = getErrorMessage(
+        err,
+        "Failed to reset password. The link might be invalid or expired. Please request a new one."
+      );
       setError(errorMessage);
       showToast(errorMessage, "error");
     } finally {

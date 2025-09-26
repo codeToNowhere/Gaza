@@ -68,17 +68,14 @@
 }
 
 /* Border color classes (from photoStatus.js) */
-.border-released {
+.border-injured {
   border-color: #006400;
 }
 .border-deceased {
   border-color: #000000;
 }
 .border-missing {
-  border-color: #8b0000;
-}
-.border-detained {
-  border-color: #ff9800;
+  border-color: #ff0000;
 }
 
 /* Status label  */
@@ -97,20 +94,25 @@
 }
 
 /* Background color classes for the photo label (from photoStatus.js)*/
-.label-released {
+.label-injured {
   background-color: #006400;
 }
 .label-deceased {
   background-color: #000000;
 }
 .label-missing {
-  background-color: #8b0000;
-}
-.label-detained {
-  background-color: #ff9800;
+  background-color: #ff0000;
 }
 
 /* --- Other UI Elements --- */
+
+.photocard-number {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #666;
+  margin-top: 0.25rem;
+  text-align: center;
+}
 
 .photocard-name {
   align-items: center;

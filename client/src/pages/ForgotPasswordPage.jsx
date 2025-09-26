@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useToast } from "../context/ToastContext";
 import { authApiClient } from "../context/AuthContext";
 import Spinner from "../components/Spinner";
+import { getErrorMessage } from "../utils/getErrorMessage";
 import "../styles/pages/AuthForm.css";
 
 const ForgotPasswordPage = () => {
@@ -33,9 +34,10 @@ const ForgotPasswordPage = () => {
       showToast(successMessage, "info");
       setEmail("");
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message ||
-        "Failed to send reset email. Please try again.";
+      const errorMessage = getErrorMessage(
+        err,
+        "Failed to send reset email. Please try again."
+      );
       setError(errorMessage);
       showToast(errorMessage, "error");
     } finally {

@@ -9,7 +9,7 @@ export const getStatusLabel = (photocard) => {
   if (photocard.condition === "missing") return "Missing";
   if (photocard.condition === "deceased") return "Deceased";
 
-  return "Detained";
+  return "Injured";
 };
 
 const STATUS_MAP = {
@@ -23,10 +23,10 @@ const STATUS_MAP = {
     border: "border-missing",
     label: "label-missing",
   },
-  Detained: {
+  Injured: {
     color: "#006400",
-    border: "border-detained",
-    label: "label-detained",
+    border: "border-injured",
+    label: "label-injured",
   },
 };
 
@@ -40,7 +40,7 @@ export const getLabelClass = (status) => STATUS_MAP[status]?.label || "";
 /**
  * Applies filters and search queries to a list of photocards
  * @param {Array} photocards - The array of all photocards.
- * @param {Array} selectedFilters - An array of filter strings (e.g., ['Detained', 'Missing']).
+ * @param {Array} selectedFilters - An array of filter strings (e.g., ['Injured', 'Missing']).
  * @param {string} searchQuery - The search query string.
  * @param {boolean} showFlaggedDuplicates - Whether to include flagged/duplicate photocards.
  * @returns {Array} - The filtered array of photocards.
@@ -49,16 +49,19 @@ export const getLabelClass = (status) => STATUS_MAP[status]?.label || "";
 export const applyFilters = (
   photocards,
   selectedFilters,
-  searchQuery,
   showFlaggedDuplicates,
-  excludeUnidentified = false
+  unidentifiedFilter = "all",
+  searchQuery = ""
 ) => {
   if (!Array.isArray(photocards)) {
     return [];
   }
 
   return photocards.filter((photocard) => {
-    if (excludeUnidentified && photocard.isUnidentified) {
+    if (unidentifiedFilter === "identified" && photocard.isUnidentified) {
+      return false;
+    }
+    if (unidentifiedFilter === "unidentified" && !photocard.isUnidentified) {
       return false;
     }
 
@@ -66,14 +69,11 @@ export const applyFilters = (
       selectedFilters.length === 0 ||
       selectedFilters.includes(getStatusLabel(photocard));
 
-    const query = searchQuery.toLowerCase();
-    const fullName = `${photocard.name}`.toLowerCase();
-
     const matchesSearch =
       searchQuery === "" ||
-      fullName.includes(query) ||
-      photocard.age ||
-      photocard.condition;
+      photocard.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      photocard.photocardNumber?.toString().includes(searchQuery) ||
+      photocard.biography?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const isFlaggedOrConfirmedDuplicate =
       photocard.flagged || photocard.isConfirmedDuplicate;
@@ -100,4 +100,29 @@ export const getPhotocardImageSrc = (photocard) => {
   }
 
   return `${import.meta.env.VITE_BACKEND_URL}/uploads/${photocard.image}`;
+};
+
+// === Photocard Number Display ===
+// In utils/photocardUtils.js
+export const formatPhotocardNumber = (number) => {
+  if (!number && number !== 0) return "N/A";
+
+  if (typeof number === "string" && number.endsWith("ID")) {
+    // Handle identified cards: "017ID" → "#017ID"
+    const baseNumber = number.replace("ID", "");
+    return `#${baseNumber}ID`;
+  }
+
+  // Handle regular numbers: 17 → "#017"
+  if (typeof number === "number") {
+    return `#${number.toString().padStart(3, "0")}`;
+  }
+
+  // Handle string numbers without ID: "17" → "#017"
+  if (typeof number === "string" && !isNaN(number)) {
+    return `#${number.padStart(3, "0")}`;
+  }
+
+  // Return as-is if it's already formatted or unknown format
+  return `#${number}`;
 };

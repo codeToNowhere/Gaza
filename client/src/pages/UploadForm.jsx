@@ -19,6 +19,8 @@ import {
   getInitialPhotocardFormData,
   handlePhotocardFormChange,
 } from "../utils/formDataUtils";
+import { getErrorMessage } from "../utils/getErrorMessage";
+import { formatPhotocardNumber } from "../utils/photocardUtils";
 // Styles
 import "../styles/modals/Modals.css";
 import "../styles/modals/ImageCropperModal.css";
@@ -183,6 +185,8 @@ const UploadForm = ({ refreshPhotocards }) => {
 
       formDataToSend.append("name", formData.name);
 
+      formDataToSend.append("isUnidentified", formData.isUnidentified);
+
       formDataToSend.append("age", formData.age || "");
       formDataToSend.append("months", formData.months || "");
 
@@ -222,10 +226,15 @@ const UploadForm = ({ refreshPhotocards }) => {
         }
 
         if (response.data.success) {
-          showToast(
-            isEditing ? "Photocard Updated!" : "Photocard Uploaded!",
-            "success"
-          );
+          const photocardNumber = response.data.photocard?.photocardNumber;
+
+          const successMessage = isEditing
+            ? "Photocard Updated!"
+            : `Photocard Uploaded! ID: ${formatPhotocardNumber(
+                photocardNumber
+              )}`;
+
+          showToast(successMessage, "success");
 
           if (refreshPhotocards) {
             refreshPhotocards();
@@ -242,10 +251,7 @@ const UploadForm = ({ refreshPhotocards }) => {
           );
         }
       } catch (err) {
-        const errorMessage =
-          err.response?.data?.message ||
-          err.message ||
-          "Failed to save photocard.";
+        const errorMessage = getErrorMessage(err, "Failed to save photocard.");
         setError(errorMessage);
         showToast(`Error: ${errorMessage}`, "error");
         openMessage(
@@ -282,6 +288,16 @@ const UploadForm = ({ refreshPhotocards }) => {
       return;
     }
 
+    const nameIsUnknown = formData.name.toLowerCase() === "unknown";
+    if (nameIsUnknown && !formData.isUnidentified) {
+      showToast(
+        "Please check the 'Name is unknown' box if you've entered 'Unknown' in the name field.",
+        "warning"
+      );
+      return;
+    }
+
+    // If the user checks the box, we don't need to do the duplicate check
     if (formData.isUnidentified) {
       await processPhotocardSubmission(false, null);
       return;
@@ -317,9 +333,10 @@ const UploadForm = ({ refreshPhotocards }) => {
         await processPhotocardSubmission(false, null);
       }
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message ||
-        "Failed to check for duplicate photocards.";
+      const errorMessage = getErrorMessage(
+        err,
+        "Failed to check for duplicate photocards."
+      );
       setError(errorMessage);
       showToast(`Duplicate check failed: ${errorMessage}`, "error");
       openMessage("Error", `Duplicate check failed: ${errorMessage}`, "error");
@@ -525,15 +542,15 @@ const UploadForm = ({ refreshPhotocards }) => {
                 <button
                   type="button"
                   className={`condition-button ${
-                    formData.condition === "detained" ? "selected" : ""
+                    formData.condition === "injured" ? "selected" : ""
                   }`}
-                  onClick={() => handleConditionChange("detained")}
+                  onClick={() => handleConditionChange("injured")}
                   disabled={disableForm}
                   aria-pressed={
-                    formData.condition === "detained" ? "true" : "false"
+                    formData.condition === "injured" ? "true" : "false"
                   }
                 >
-                  Detained
+                  Injured
                 </button>
                 <button
                   type="button"

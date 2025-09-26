@@ -11,7 +11,7 @@ const photoCardSchema = new mongoose.Schema(
     months: { type: Number },
     condition: {
       type: String,
-      enum: ["detained", "deceased", "missing", null],
+      enum: ["injured", "deceased", "missing", null],
       default: null,
     },
     biography: { type: String, trim: true },
@@ -43,6 +43,21 @@ const photoCardSchema = new mongoose.Schema(
       enum: ["unverified", "verification_pending", "verified", "rejected"],
       default: "unverified",
     },
+    photocardNumber: {
+      type: mongoose.Schema.Types.Mixed,
+      unique: true,
+      sparse: true,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+    isProvisional: { type: Boolean, default: false },
+    provisionalOf: { type: mongoose.Schema.Types.ObjectId, ref: "PhotoCard" },
   },
   { timestamps: true }
 );

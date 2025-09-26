@@ -8,7 +8,6 @@ const { sendJsonResponse } = require("../utils/responseHelpers");
 const {
   validateVerification,
   updateVerificationRecord,
-  createVerificationResponse,
 } = require("../utils/verificationHelpers");
 
 // --- USER ENDPOINTS ---
@@ -29,29 +28,34 @@ const submitIdentification = catchAsync(async (req, res, next) => {
     return next(new AppError("Photocard is already identified.", 400));
   }
 
-  const existingVerification = await Verification.findOne({
-    originalPhotocard: photocardId,
-    status: "pending",
+  const provisionalPhotocard = new PhotoCard({
+    // Info remaining constant
+    image: originalPhotocard.image,
+    createdBy: originalPhotocard.createdBy,
+
+    // Provisional update
+    name: name,
+    age: age || null,
+    months: months || null,
+    condition: condition || null,
+    biography: biography || "",
+    isUnidentified: false,
+
+    // Mark as provisional
+    isProvisional: true,
+    provisionalOf: originalPhotocard._id,
+    status: "provisional",
+    verificationStatus: "verification_pending",
   });
 
-  if (existingVerification) {
-    return next(
-      new AppError("A verification is already pending for this photocard.", 409)
-    );
-  }
+  await provisionalPhotocard.save();
 
   const verification = new Verification({
     originalPhotocard: photocardId,
-    proposedData: {
-      name,
-      age: age || null,
-      months: months || null, // ← Added months back (was missing!)
-      condition: condition || null,
-      biography: biography || "",
-      isUnidentified: false,
-    },
+    provisionalPhotocard: provisionalPhotocard._id,
     submittedBy: req.user._id,
     status: "pending",
+    type: "identification",
   });
 
   await verification.save();
@@ -60,7 +64,11 @@ const submitIdentification = catchAsync(async (req, res, next) => {
   await originalPhotocard.save();
 
   sendJsonResponse(res, 201, "Identification submitted for review.", {
-    verification: { id: verification._id, status: verification.status },
+    verification: {
+      id: verification._id,
+      status: verification.status,
+      provisionalPhotocardId: provisionalPhotocard._id,
+    },
   });
 });
 
@@ -87,35 +95,60 @@ const getPendingVerifications = catchAsync(async (req, res) => {
 
 const approveVerification = catchAsync(async (req, res, next) => {
   const { verificationId } = req.params;
-  const { comments } = req.body;
 
-  const verification = await Verification.findById(verificationId).populate(
-    "originalPhotocard"
-  );
+  const verification = await Verification.findById(verificationId)
+    .populate("originalPhotocard")
+    .populate("provisionalPhotocard");
 
   validateVerification(verification);
 
-  // Create new identified photocard
-  const newPhotocard = new PhotoCard({
-    ...verification.proposedData,
-    image: verification.originalPhotocard.image,
-    createdBy: verification.originalPhotocard.createdBy,
-    identifiedVersion: verification.originalPhotocard._id,
+  const originalNumber = verification.originalPhotocard.photocardNumber;
+  const identifiedNumber = originalNumber
+    ? `${originalNumber.toString().padStart(3, "0")}ID`
+    : null;
+
+  const deletedNumber = originalNumber
+    ? `DELETED_${originalNumber}_${Date.now()}`
+    : `DELETED_${Date.now()}`;
+
+  await PhotoCard.findByIdAndUpdate(verification.originalPhotocard._id, {
+    photocardNumber: deletedNumber,
   });
 
-  await newPhotocard.save();
+  const approvedPhotocard = await PhotoCard.findByIdAndUpdate(
+    verification.provisionalPhotocard._id,
+    {
+      isProvisional: false,
+      provisionalOf: null,
+      photocardNumber: originalNumber,
+      verificationStatus: "verified",
+      status: "active",
+    },
+    { new: true }
+  );
 
-  // Update original photocard
-  verification.originalPhotocard.identifiedVersion = newPhotocard._id;
-  verification.originalPhotocard.verificationStatus = "verified";
-  await verification.originalPhotocard.save();
+  // Soft delete provisional photocard
+  await PhotoCard.findByIdAndUpdate(verification.originalPhotocard._id, {
+    photocardNumber: identifiedNumber,
+    isDeleted: true,
+    status: "deleted",
+    deletedAt: new Date(),
+    deleteReason: "replaced_by_identification",
+    replacedBy: approvedPhotocard._id,
+  });
 
-  // Update verification record
-  await updateVerificationRecord(verification, "approved", req.user, comments);
+  await updateVerificationRecord(verification, "approved", req.user, null);
 
-  sendJsonResponse(res, 200, "Verification approved successfully.", {
-    newPhotocard: { id: newPhotocard._id, name: newPhotocard.name },
-    originalPhotocard: { id: verification.originalPhotocard._id },
+  sendJsonResponse(res, 200, "Identification approved successfully.", {
+    approvedPhotocard: {
+      id: approvedPhotocard._id,
+      name: approvedPhotocard.name,
+      photocardNumber: approvedPhotocard.photocardNumber,
+    },
+    originalPhotocard: {
+      id: verification.originalPhotocard._id,
+      photocardNumber: identifiedNumber,
+    },
   });
 });
 
@@ -124,24 +157,38 @@ const rejectVerification = catchAsync(async (req, res, next) => {
   const { comments } = req.body;
 
   const verification = await Verification.findById(verificationId).populate(
-    "originalPhotocard"
+    "provisionalPhotocard"
   );
 
   validateVerification(verification);
 
-  // Update original photocard
-  verification.originalPhotocard.verificationStatus = "rejected";
-  await verification.originalPhotocard.save();
+  // Soft delete provisional
+  await PhotoCard.findByIdAndUpdate(verification.provisionalPhotocard._id, {
+    isDeleted: true,
+    status: "deleted",
+    deletedAt: new Date(),
+    deleteReason: "rejected_identification",
+    rejectionComments: comments || "",
+  });
+
+  // Restore original photocard
+  await PhotoCard.findByIdAndUpdate(verification.originalPhotocard._id, {
+    verificationStatus: "unverified",
+    status: "active",
+    isDeleted: false,
+  });
 
   // Update verification record
-  await updateVerificationRecord(verification, "rejected", req.user, comments);
-
-  sendJsonResponse(
-    res,
-    200,
-    "Verification rejected successfully.",
-    createVerificationResponse(verification)
+  await updateVerificationRecord(
+    verification,
+    "rejected",
+    req.user,
+    comments || ""
   );
+
+  sendJsonResponse(res, 200, "Identification rejected.", {
+    rejectionComments: comments,
+  });
 });
 
 const getVerificationById = catchAsync(async (req, res, next) => {
@@ -149,6 +196,7 @@ const getVerificationById = catchAsync(async (req, res, next) => {
 
   const verification = await Verification.findById(verificationId)
     .populate("originalPhotocard")
+    .populate("provisionalPhotocard")
     .populate("submittedBy", "username email")
     .populate("reviewedBy", "username email");
 

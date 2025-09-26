@@ -1,57 +1,75 @@
 // formDataUtils.js
 
-// Common initial form data for photocard forms
+// Simple and safe initial form data for photocard forms
 export const getInitialPhotocardFormData = (existingData = {}) => {
-  return {
-    name: existingData.name || "",
-    age: existingData.age || "",
-    months: existingData.months || "",
-    condition: existingData.condition || "",
-    biography: existingData.biography || "",
-    isUnidentified: existingData.isUnidentified || false,
-    image: existingData.image || null,
-    isConfirmedDuplicate: existingData.isConfirmedDuplicate || false,
-    duplicateOf: existingData.duplicateOf || null,
-    ...existingData,
+  // Define safe defaults for all form fields
+  const defaults = {
+    name: "",
+    age: "",
+    months: "",
+    condition: "",
+    biography: "",
+    isUnidentified: false,
+    image: null,
+    isConfirmedDuplicate: false,
+    duplicateOf: null,
   };
+
+  // Merge existingData with defaults, safely handling null/undefined
+  const result = { ...defaults };
+
+  // Only copy properties that exist in defaults and are not null/undefined
+  Object.keys(defaults).forEach((key) => {
+    if (existingData[key] != null) {
+      result[key] = existingData[key];
+    }
+  });
+
+  return result;
 };
 
-// Common handleChange function for photocard forms
+// Simplified handleChange function
 export const handlePhotocardFormChange =
   (setFormData, options = {}) =>
   (e) => {
-    const { name: fieldName, value } = e.target;
+    const { name, value, type } = e.target;
 
     setFormData((prev) => {
       let newValue = value;
 
-      // Special handling for age field (show/hide months)
-      if (fieldName === "age") {
+      // Handle age field specifically
+      if (name === "age") {
+        // Only allow numbers
         const numericValue = value.replace(/[^0-9]/g, "");
         newValue = numericValue;
+
         const ageValue = parseInt(numericValue) || 0;
 
-        // Months field visibility
+        // Show/hide months field based on age
         if (options.setShowMonthsField) {
           options.setShowMonthsField(ageValue < 3);
         }
 
+        // If age is 3 or older, clear months
         if (ageValue >= 3) {
-          return { ...prev, [fieldName]: newValue, months: "" };
+          return {
+            ...prev,
+            age: newValue,
+            months: "",
+          };
         }
       }
 
-      // All other fields
-      return { ...prev, [fieldName]: newValue };
+      // For all other fields, just update the value
+      return { ...prev, [name]: newValue };
     });
 
-    // Additional field-specific logic
-    if (fieldName === "name" && options.onNameChange) {
+    // Optional: name change callback
+    if (name === "name" && options.onNameChange) {
       options.onNameChange();
     }
   };
 
-// Validation helper
 export const validatePhotocardForm = (formData) => {
   const errors = {};
 

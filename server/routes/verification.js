@@ -3,7 +3,6 @@ const express = require("express");
 const router = express.Router();
 const verificationController = require("../controllers/verificationController");
 const { authenticateToken } = require("../middleware/authMiddleware");
-const { adminOnly } = require("../middleware/adminOnly");
 
 // USER
 router.post(

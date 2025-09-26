@@ -28,6 +28,7 @@ router.get("/ids", async (req, res, next) => {
 router.get("/", photocardController.getAllPhotocards);
 router.get("/check-name", photocardController.checkExistingPhotocards);
 router.get("/duplicates", photocardController.getPotentialDuplicates);
+router.get("/search", photocardController.searchPhotocards);
 
 // --- AUTHENTICATED ROUTES ---
 router.get(
@@ -36,7 +37,7 @@ router.get(
   photocardController.getUserPhotocards
 );
 
-router.get("/:id", authenticateToken, photocardController.getPhotocardById);
+router.get("/:id", authenticateToken, photocardController.getPhotocard);
 
 router.post(
   "/",
@@ -57,7 +58,7 @@ router.put(
 router.delete(
   "/user/:id",
   authenticateToken,
-  photocardController.deletePhotocard
+  photocardController.softDeletePhotocard
 );
 
 // --- EXPORT ---

@@ -19,7 +19,7 @@ const adminRoutes = require("./routes/admin");
 const authRoutes = require("./routes/auth");
 const photocardRoutes = require("./routes/photocard");
 const reportRoutes = require("./routes/report");
-const verificationRoutes = require("./routes/verification.js");
+const verificationRoutes = require("./routes/verification");
 
 // --- IMPORT ERROR HANDLING ---
 const globalErrorHandler = require("./middleware/errorHandler");
@@ -66,7 +66,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/photocards", photocardRoutes);
 app.use("/api/reports", reportRoutes);
-app.use("/api/verification", verificationRoutes);
+app.use("/api/verifications", verificationRoutes);
 
 // --- UNHANDLED ROUTES (404) ---
 app.use((req, res, next) => {

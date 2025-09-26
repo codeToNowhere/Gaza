@@ -12,8 +12,11 @@ import BackToTopButton from "../components/BackToTopButton";
 import Spinner from "../components/Spinner";
 // Modals
 import BioDisplayModal from "../modals/BioDisplayModal";
-import ReportDisplayModal from "../modals/ReportDisplayModal";
 import DuplicateDisplayModal from "../modals/DuplicateDisplayModal";
+import IdentificationReviewModal from "../modals/IdentificationReviewModal";
+import ReportDisplayModal from "../modals/ReportDisplayModal";
+// Utilities
+import { getErrorMessage } from "../utils/getErrorMessage";
 // Styles & Icons
 import "../styles/pages/AdminDashboard.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -26,6 +29,7 @@ const AdminDashboard = memo(function AdminDashboard() {
 
   // --- STATE MANAGEMENT ---
   const [photocards, setPhotocards] = useState([]);
+  const [deletedPhotocards, setDeletedPhotocards] = useState([]);
   const [users, setUsers] = useState([]);
   const [duplicatePhotocards, setDuplicatePhotocards] = useState([]);
   const [verifications, setVerifications] = useState([]);
@@ -44,10 +48,14 @@ const AdminDashboard = memo(function AdminDashboard() {
     useState(null);
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [duplicatePhotocardInfo, setDuplicatePhotocardInfo] = useState(null);
+  const [isIdentificationReviewModalOpen, setIsIdentificationReviewModalOpen] =
+    useState(false);
+  const [selectedVerification, setSelectedVerification] = useState(null);
 
   const [photocardCounts, setPhotocardCounts] = useState({
     flagged: 0,
     blocked: 0,
+    deleted: 0,
     duplicates: 0,
     unidentified: 0,
     total: 0,
@@ -72,6 +80,7 @@ const AdminDashboard = memo(function AdminDashboard() {
       setPhotocardCounts({
         flagged: 0,
         blocked: 0,
+        deleted: 0,
         duplicates: 0,
         unidentified: 0,
         total: 0,
@@ -79,19 +88,25 @@ const AdminDashboard = memo(function AdminDashboard() {
     }
   }, [setError]);
 
-  const fetchUserCounts = useCallback(async () => {
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
     try {
-      const response = await apiClient.get("/admin/users/counts");
-      setUserCounts(response.data.counts);
+      const response = await apiClient.get("/admin/users");
+      const rawUsers = Array.isArray(response.data.users)
+        ? response.data.users
+        : [];
+      const filteredUsers = rawUsers.filter((u) => u._id !== user.id);
+      setUsers(filteredUsers);
+      setError(null);
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          err.message ||
-          "Failed to load user counts."
-      );
-      setUserCounts({ flagged: 0, blocked: 0, total: 0 });
+      const errorMessage = `Error fetching users: ${getErrorMessage(err)}`;
+      openMessage("Error", errorMessage, "error");
+      setError(errorMessage);
+      setUsers([]);
+    } finally {
+      setLoading(false);
     }
-  }, [setError]);
+  }, [user, openMessage, setError]);
 
   const fetchPhotocards = useCallback(async () => {
     setLoading(true);
@@ -108,9 +123,9 @@ const AdminDashboard = memo(function AdminDashboard() {
       );
       setError(null);
     } catch (err) {
-      const errorMessage = `Error fetching ${photocardFilter} photocards: ${
-        err.response?.data?.message || err.message
-      }`;
+      const errorMessage = `Error fetching ${photocardFilter} photocards: ${getErrorMessage(
+        err
+      )}`;
       openMessage("Error", errorMessage, "error");
       setError(errorMessage);
       setPhotocards([]);
@@ -119,28 +134,42 @@ const AdminDashboard = memo(function AdminDashboard() {
     }
   }, [photocardFilter, openMessage, setError]);
 
-  const fetchUsers = useCallback(async () => {
+  const fetchDeletedPhotocards = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await apiClient.get("/admin/users");
-      // Filter out current admin
-      const rawUsers = Array.isArray(response.data.users)
-        ? response.data.users
-        : [];
-      const filteredUsers = rawUsers.filter((u) => u._id !== user.id);
-      setUsers(filteredUsers);
+      const response = await apiClient.get("/admin/photocards/deleted");
+      setDeletedPhotocards(
+        Array.isArray(response.data.deletedPhotocards)
+          ? response.data.deletedPhotocards
+          : []
+      );
       setError(null);
     } catch (err) {
-      const errorMessage = `Error fetching users: ${
-        err.response?.data?.message || err.message
-      }`;
+      const errorMessage = `Error fetching deleted photocards: ${getErrorMessage(
+        err
+      )}`;
       openMessage("Error", errorMessage, "error");
       setError(errorMessage);
-      setUsers([]);
+      setDeletedPhotocards([]);
     } finally {
       setLoading(false);
     }
-  }, [user, openMessage, setError]);
+  }, [openMessage, setError]);
+
+  // Existing fetching functions
+  const fetchUserCounts = useCallback(async () => {
+    try {
+      const response = await apiClient.get("/admin/users/counts");
+      setUserCounts(response.data.counts);
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to load user counts."
+      );
+      setUserCounts({ flagged: 0, blocked: 0, total: 0 });
+    }
+  }, [setError]);
 
   const fetchDuplicatePhotocards = useCallback(async () => {
     setLoading(true);
@@ -151,9 +180,9 @@ const AdminDashboard = memo(function AdminDashboard() {
       );
       setError(null);
     } catch (err) {
-      const errorMessage = `Error fetching duplicate photocards: ${
-        err.response?.data?.message || err.message
-      }`;
+      const errorMessage = `Error fetching duplicate photocards: ${getErrorMessage(
+        err
+      )}`;
       openMessage("Error", errorMessage, "error");
       setError(errorMessage);
       setDuplicatePhotocards([]);
@@ -173,9 +202,9 @@ const AdminDashboard = memo(function AdminDashboard() {
       );
       setError(null);
     } catch (err) {
-      const errorMessage = `Error fetching verifications: ${
-        err.response?.data?.message || err.message
-      }`;
+      const errorMessage = `Error fetching verifications: ${getErrorMessage(
+        err
+      )}`;
       openMessage("Error", errorMessage, "error");
       setError(errorMessage);
       setVerifications([]);
@@ -196,6 +225,8 @@ const AdminDashboard = memo(function AdminDashboard() {
       fetchDuplicatePhotocards();
     } else if (activeTab === "verifications") {
       fetchVerifications();
+    } else if (activeTab === "deleted") {
+      fetchDeletedPhotocards();
     }
   }, [
     activeTab,
@@ -205,6 +236,7 @@ const AdminDashboard = memo(function AdminDashboard() {
     fetchVerifications,
     fetchPhotocardCounts,
     fetchUserCounts,
+    fetchDeletedPhotocards,
   ]);
 
   // --- EFFECTS ---
@@ -231,9 +263,7 @@ const AdminDashboard = memo(function AdminDashboard() {
           fetchDashboardData();
         }
       } catch (err) {
-        const errorMessage = `${errorMessagePrefix}: ${
-          err.response?.data?.message || err.message
-        }`;
+        const errorMessage = `${errorMessagePrefix}: ${getErrorMessage(err)}`;
         openMessage("Error", errorMessage, "error");
         setError(errorMessage);
       } finally {
@@ -312,6 +342,27 @@ const AdminDashboard = memo(function AdminDashboard() {
     ]
   );
 
+  const handleRestoreFromDeleted = useCallback(
+    (photocardId) => {
+      openConfirm(
+        "Restore Photocard",
+        "Are you sure you want to RESTORE this photocard? It will be visible on the gallery again.",
+        async () => {
+          await handleAction(
+            async () => {
+              await apiClient.put(`/admin/photocards/${photocardId}/restore`);
+            },
+            "Success",
+            "Photocard restored successfully!",
+            "Failed to restore photocard.",
+            [fetchPhotocardCounts, fetchDeletedPhotocards]
+          );
+        }
+      );
+    },
+    [openConfirm, handleAction, fetchPhotocardCounts, fetchDeletedPhotocards]
+  );
+
   const handleDeletePhotocard = useCallback(
     (photocardId) => {
       openConfirm(
@@ -325,7 +376,12 @@ const AdminDashboard = memo(function AdminDashboard() {
             "Success",
             "Photocard deleted successfully!",
             "Failed to delete photocard!",
-            [fetchPhotocards, fetchPhotocardCounts, fetchDuplicatePhotocards]
+            [
+              fetchPhotocards,
+              fetchPhotocardCounts,
+              fetchDuplicatePhotocards,
+              fetchDeletedPhotocards,
+            ]
           );
         }
       );
@@ -333,6 +389,7 @@ const AdminDashboard = memo(function AdminDashboard() {
     [
       fetchPhotocards,
       fetchPhotocardCounts,
+      fetchDeletedPhotocards,
       fetchDuplicatePhotocards,
       openConfirm,
       handleAction,
@@ -358,10 +415,13 @@ const AdminDashboard = memo(function AdminDashboard() {
         let reports;
         let response;
 
-        if (reportType === "photocard") {
-          response = await apiClient.get(`/admin/reports/photocard/${itemId}`);
-          reports = response.data.reports;
+        // Consolidate API call for both types
+        response = await apiClient.get(
+          `/admin/reports/${itemId}?itemType=${reportType}`
+        );
+        reports = response.data.reports;
 
+        if (reportType === "photocard") {
           const isDuplicateReport = reports.some(
             (report) => report.reasonType === "duplicate"
           );
@@ -383,9 +443,6 @@ const AdminDashboard = memo(function AdminDashboard() {
             setIsReportModalOpen(true);
           }
         } else if (reportType === "user") {
-          response = await apiClient.get(`/admin/reports/user/${itemId}`);
-          reports = response.data.reports;
-
           setSelectedReportPhotocardId(null);
           setSelectedReportUserId(itemId);
           setIsReportModalOpen(true);
@@ -395,9 +452,9 @@ const AdminDashboard = memo(function AdminDashboard() {
 
         setError(null);
       } catch (err) {
-        const errorMessage = `Failed to fetch report info: ${
-          err.response?.data?.message || err.message
-        }`;
+        const errorMessage = `Failed to fetch report info: ${getErrorMessage(
+          err
+        )}`;
         openMessage("Error", errorMessage, "error");
         setError(errorMessage);
         setDuplicatePhotocardInfo(null);
@@ -433,9 +490,9 @@ const AdminDashboard = memo(function AdminDashboard() {
         setIsDuplicateModalOpen(false);
         fetchDashboardData();
       } catch (err) {
-        const errorMessage = `Failed to confirm duplicate: ${
-          err.response?.data?.message || err.message
-        }`;
+        const errorMessage = `Failed to confirm duplicate: ${getErrorMessage(
+          err
+        )}`;
         openMessage("Error", errorMessage, "error");
       } finally {
         setIsProcessingAction(false);
@@ -461,9 +518,9 @@ const AdminDashboard = memo(function AdminDashboard() {
         setIsDuplicateModalOpen(true);
         setError(null);
       } catch (err) {
-        const errorMessage = `Failed to fetch duplicate photocard info: ${
-          err.response?.data?.message || err.message
-        }`;
+        const errorMessage = `Failed to fetch duplicate photocard info: ${getErrorMessage(
+          err
+        )}`;
         openMessage("Error", errorMessage, "error");
         setError(errorMessage);
         setDuplicatePhotocardInfo(null);
@@ -507,6 +564,92 @@ const AdminDashboard = memo(function AdminDashboard() {
       fetchDuplicatePhotocards,
       handleCloseDuplicateModal,
     ]
+  );
+
+  const handleReviewIdentification = useCallback(
+    async (verificationId) => {
+      setLoading(true);
+      try {
+        const response = await apiClient.get(
+          `/admin/verifications/${verificationId}`
+        );
+        const verification = response.data.verification;
+
+        setSelectedVerification({
+          verification: verification,
+          originalPhotocard: verification.originalPhotocard,
+          provisionalPhotocard: verification.provisionalPhotocard,
+        });
+        setIsIdentificationReviewModalOpen(true);
+        setError(null);
+      } catch (err) {
+        console.error("Error in handleReviewIdentification:", err);
+        const errorMessage = `Failed to fetch verification details: ${getErrorMessage(
+          err
+        )}`;
+        openMessage("Error", errorMessage, "error");
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [openMessage, setError]
+  );
+
+  const handleCloseIdentificationModal = useCallback(() => {
+    setIsIdentificationReviewModalOpen(false);
+    setSelectedVerification(null);
+  }, []);
+
+  const handleApproveIdentification = useCallback(
+    async (verificationId) => {
+      setIsProcessingAction(true);
+
+      try {
+        await apiClient.patch(`/admin/verifications/${verificationId}/approve`);
+        openMessage(
+          "Success",
+          "Identification approved successfully!",
+          "success"
+        );
+        setIsIdentificationReviewModalOpen(false);
+        fetchDashboardData();
+      } catch (err) {
+        const errorMessage = `Failed to approve identification: ${getErrorMessage(
+          err
+        )}`;
+        openMessage("Error", errorMessage, "error");
+      } finally {
+        setIsProcessingAction(false);
+      }
+    },
+    [openMessage, fetchDashboardData]
+  );
+
+  const handleRejectIdentification = useCallback(
+    async (verificationId, comments = "") => {
+      setIsProcessingAction(true);
+
+      try {
+        const data = comments ? { comments } : {};
+
+        await apiClient.patch(
+          `/admin/verifications/${verificationId}/reject`,
+          data
+        );
+        openMessage("Success", "Identification rejected.", "success");
+        setIsIdentificationReviewModalOpen(false);
+        fetchDashboardData();
+      } catch (err) {
+        const errorMessage = `Failed to reject identification: ${getErrorMessage(
+          err
+        )}`;
+        openMessage("Error", errorMessage, "error");
+      } finally {
+        setIsProcessingAction(false);
+      }
+    },
+    [openMessage, fetchDashboardData]
   );
 
   // --- User Handlers ---
@@ -609,6 +752,9 @@ const AdminDashboard = memo(function AdminDashboard() {
             Blocked: <strong>{photocardCounts.blocked}</strong>
           </p>
           <p>
+            Deleted: <strong>{photocardCounts.deleted}</strong>
+          </p>
+          <p>
             Duplicates: <strong>{photocardCounts.duplicates}</strong>
           </p>
           <p>
@@ -650,6 +796,13 @@ const AdminDashboard = memo(function AdminDashboard() {
           disabled={isProcessingAction}
         >
           Verifications
+        </button>
+        <button
+          className={`tab-button ${activeTab === "deleted" ? "active" : ""}`}
+          onClick={() => setActiveTab("deleted")}
+          disabled={isProcessingAction}
+        >
+          <FontAwesomeIcon icon="trash" /> Deleted Photocards
         </button>
         <button
           className={`tab-button ${activeTab === "users"}`}
@@ -753,18 +906,72 @@ const AdminDashboard = memo(function AdminDashboard() {
 
       {activeTab === "verifications" && (
         <div className="admin-section verifications-section">
-          <h2>Pending Verifications</h2>{" "}
+          <h2>Pending Identifications</h2>{" "}
           {verifications.length === 0 ? (
-            <p>No pending verifications found.</p>
+            <p>No pending identification requests.</p>
           ) : (
-            verifications.map((verification) => (
-              <AdminVerificationReview
-                key={verification._id}
-                verification={verification}
-                onUpdate={fetchVerifications}
-              />
-            ))
+            <div className="verifications-list">
+              {verifications.map((verification) => (
+                <div key={verification._id} className="verification-item">
+                  <div className="verification-info">
+                    <h4>Identification Request</h4>
+                    <p>
+                      <strong>Submitted by:</strong>{" "}
+                      {verification.submittedBy?.username}
+                    </p>
+                    <p>
+                      <strong>Proposed Name:</strong>{" "}
+                      {verification.proposedData?.name}
+                    </p>
+                    <p>
+                      <strong>Submitted:</strong>{" "}
+                      {new Date(verification.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+
+                  <div className="verification-actions">
+                    <button
+                      className="review-button"
+                      onClick={() =>
+                        handleReviewIdentification(verification._id)
+                      }
+                      disabled={isProcessingAction}
+                    >
+                      Review Identification
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
+        </div>
+      )}
+
+      {activeTab === "deleted" && (
+        <div className="admin-section deleted-section">
+          <h2>Soft-Deleted Photocards</h2>
+          <p>
+            These photocards have been soft-deleted and are not visible in the
+            main gallery. You can restore them or delete them permanently.
+          </p>
+          <div className="photocard-list">
+            {deletedPhotocards?.length > 0 ? (
+              deletedPhotocards.map((photocard) => (
+                <AdminPhotocardItem
+                  key={photocard._id}
+                  photocard={photocard}
+                  user={user}
+                  onPhotocardClick={handlePhotocardClick}
+                  onRestore={handleRestoreFromDeleted}
+                  onDelete={handleDeletePhotocard}
+                  isProcessingAction={isProcessingAction}
+                  isDeleted={true}
+                />
+              ))
+            ) : (
+              <p>No soft-deleted photocards found.</p>
+            )}
+          </div>
         </div>
       )}
 
@@ -800,6 +1007,7 @@ const AdminDashboard = memo(function AdminDashboard() {
         isOpen={isBioDisplayModalOpen}
         onClose={handleCloseBioDisplayModal}
         photocardId={bioDisplayModalPhotoId}
+        isAdmin={true}
       />
 
       <ReportDisplayModal
@@ -820,6 +1028,16 @@ const AdminDashboard = memo(function AdminDashboard() {
         onConfirmDuplicate={handleConfirmAsDuplicate}
         onPhotocardClick={handlePhotocardClick}
         onNotDuplicate={handleNotDuplicate}
+      />
+
+      <IdentificationReviewModal
+        isOpen={isIdentificationReviewModalOpen}
+        onClose={handleCloseIdentificationModal}
+        verificationInfo={selectedVerification}
+        onApprove={handleApproveIdentification}
+        onReject={handleRejectIdentification}
+        isProcessingAction={isProcessingAction}
+        onPhotocardClick={handlePhotocardClick}
       />
     </div>
   );

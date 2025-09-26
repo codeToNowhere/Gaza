@@ -4,6 +4,7 @@ import { useState, useRef, useMemo, useCallback, useEffect, memo } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useMessage } from "../context/MessageContext";
 import {
+  formatPhotocardNumber,
   getBorderClass,
   getLabelClass,
   getPhotocardImageSrc,
@@ -18,8 +19,7 @@ const Photocard = memo(function Photocard({
   photocard,
   onClick,
   onOpenReportModal,
-  currentUser,
-  onIdentify,
+  isProvisional = false,
 }) {
   // --- HOOKS & STATE MANAGEMENT ---
   const { user } = useAuth();
@@ -34,6 +34,7 @@ const Photocard = memo(function Photocard({
   const isBlocked = photocard.blocked || false;
   const status = getStatusLabel(photocard);
   const borderClass = getBorderClass(status);
+  const photocardNumber = formatPhotocardNumber(photocard.photocardNumber);
   const isOwner =
     user && photocard.createdBy && photocard.createdBy._id === user.id;
 
@@ -129,7 +130,7 @@ const Photocard = memo(function Photocard({
   return (
     <div className="photocard-wrapper">
       <div
-        className="photocard"
+        className={`photocard ${isProvisional ? "provisional" : ""}`}
         onClick={onClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -153,6 +154,10 @@ const Photocard = memo(function Photocard({
           <div className={`photocard-label ${getLabelClass(status)}`}>
             {status}
           </div>
+        </div>
+        <div className="photocard-number">
+          {" "}
+          {formatPhotocardNumber(photocard.photocardNumber)}
         </div>
         {photocard.name && (
           <div className="photocard-name">{photocard.name}</div>
@@ -195,16 +200,6 @@ const Photocard = memo(function Photocard({
             {isFlagged ? "Flagged" : "Flag"}
           </button>
         )
-      )}
-
-      {photocard.isUnidentified && currentUser && !currentUser.isBlocked && (
-        <button
-          className="identify-button"
-          onClick={() => onIdentify(photocard)}
-          title="I know this person"
-        >
-          Identify
-        </button>
       )}
     </div>
   );

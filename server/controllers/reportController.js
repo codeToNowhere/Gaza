@@ -159,5 +159,3 @@ module.exports = {
   getReportCounts,
   updateReportStatus,
 };
-
-//API Design: By consolidating the functions, you can design a cleaner API. Instead of having two separate endpoints like /reports/by-photocard/:photocardId and /reports/by-user/:userId, you can create a single, more flexible endpoint, such as /reports/:itemId with a query parameter for the item type (e.g., ?itemType=photocard).

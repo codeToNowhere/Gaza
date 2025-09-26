@@ -30,9 +30,9 @@ const ReportDisplayModal = ({
     if (reportId) {
       endpoint = `/admin/reports/single/${reportId}`;
     } else if (photocardId) {
-      endpoint = `/admin/reports/photocard/${photocardId}`;
+      endpoint = `/admin/reports/${photocardId}?itemType=photocard`;
     } else if (userId) {
-      endpoint = `/admin/reports/user/${userId}`;
+      endpoint = `/admin/reports/${userId}?itemType=user`;
     } else {
       setLoading(false);
       setError("No item ID provided to fetch reports");

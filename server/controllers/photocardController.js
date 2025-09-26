@@ -3,6 +3,7 @@
 const mongoose = require("mongoose");
 const PhotoCard = require("../models/PhotoCard");
 const Report = require("../models/Report");
+const Sequence = require("../models/Sequence");
 const User = require("../models/User");
 const AppError = require("../utils/AppError");
 const catchAsync = require("../utils/catchAsync");
@@ -11,10 +12,10 @@ const {
   deleteImageFile,
   handleImageUpload,
 } = require("../utils/imageHelpers");
-const { processImage } = require("../utils/imageProcessor");
 const {
   preparePhotocardData,
   duplicatePhotocardsQuery,
+  buildPhotocardQuery,
 } = require("../utils/photocardHelpers");
 const { resolvePendingReports } = require("../utils/reportHelpers");
 const { sendJsonResponse } = require("../utils/responseHelpers");
@@ -22,22 +23,31 @@ const fs = require("fs");
 
 // --- PUBLIC ACTIONS ---
 const getAllPhotocards = catchAsync(async (req, res, next) => {
-  const { excludeUnidentified } = req.query;
+  const { excludeUnidentified, page = 1, limit = 100 } = req.query;
 
-  let query = { blocked: false };
+  let query = { blocked: false, isDeleted: false, isProvisional: false };
 
-  // Only exclude unidentified if specifically requested
   if (excludeUnidentified === "true") {
     query.isUnidentified = false;
   }
-  const photocards = await PhotoCard.find(query)
-    .withCreatorDetails()
-    .sort({ createdAt: -1 });
 
-  let detainedCount = 0;
+  const pageNum = parseInt(page);
+  const limitNum = parseInt(limit);
+  const skip = (pageNum - 1) * limitNum;
+
+  const [photocards, totalCount] = await Promise.all([
+    PhotoCard.find(query)
+      .withCreatorDetails()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum),
+    PhotoCard.countDocuments(query),
+  ]);
+
+  let injuredCount = 0;
   let missingCount = 0;
   let deceasedCount = 0;
-  let totalCount = 0;
+  let totalVisibleCount = 0;
 
   photocards.forEach((photocard) => {
     if (photocard.blocked || photocard.isConfirmedDuplicate) {
@@ -50,46 +60,78 @@ const getAllPhotocards = catchAsync(async (req, res, next) => {
       missingCount++;
     } else if (condition === "deceased") {
       deceasedCount++;
-    } else if (condition === "detained") {
-      detainedCount++;
+    } else if (condition === "injured") {
+      injuredCount++;
     }
-    totalCount++;
+    totalVisibleCount++;
   });
+
+  //Pagination
+  const totalPages = Math.ceil(totalCount / limitNum);
+  const hasNextPage = pageNum < totalPages;
+  const hasPrevPage = pageNum > 1;
 
   sendJsonResponse(res, 200, "Photocards fetched successfully.", {
     photocards,
     counts: {
       missing: missingCount,
       deceased: deceasedCount,
-      detained: detainedCount,
-      total: totalCount,
+      injured: injuredCount,
+      total: totalVisibleCount,
+    },
+    pagination: {
+      currentPage: pageNum,
+      totalPages,
+      totalCount,
+      hasNextPage,
+      hasPrevPage,
+      nextPage: hasNextPage ? pageNum + 1 : null,
+      prevPage: hasPrevPage ? pageNum - 1 : null,
+      limitNum,
     },
   });
 });
 
-const getPhotocardById = catchAsync(async (req, res, next) => {
-  const photocard = await PhotoCard.findById(
-    req.params.id
-  ).withCreatorDetails();
+const getPhotocard = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  let photocard;
+  let query = {
+    ...buildPhotocardQuery(id),
+    isProvisional: false,
+    isDeleted: false,
+    blocked: false,
+  };
+
+  photocard = await PhotoCard.findOne(query).withCreatorDetails();
 
   if (!photocard) {
     return next(new AppError("Photocard not found.", 404));
   }
 
-  if (photocard.blocked) {
-    const user = req.user;
-    const isOwner =
-      user &&
-      photocard.createdBy &&
-      photocard.createdBy._id.toString() === user._id.toString();
-    const isAdmin = user && user.isAdmin;
+  sendJsonResponse(res, 200, "Photocard fetched successfully.", { photocard });
+});
 
-    if (!isAdmin && !isOwner) {
-      return next(new AppError("Photocard is blocked.", 403));
-    }
+const searchPhotocards = catchAsync(async (req, res, next) => {
+  const { query } = req.query;
+
+  if (!query) {
+    return next(new AppError("Search query is required.", 400));
   }
-  sendJsonResponse(res, 200, "Photocard fetched successfully.", {
-    photocard: photocard,
+
+  let searchCriteria = {
+    ...buildPhotocardQuery(query),
+    isDeleted: false,
+    blocked: false,
+    isProvisional: false,
+  };
+
+  const photocards = await PhotoCard.find(searchCriteria)
+    .sort({ createdAt: -1 })
+    .limit(100);
+
+  sendJsonResponse(res, 200, "Search results fetched successfully.", {
+    photocards,
   });
 });
 
@@ -142,7 +184,16 @@ const getPotentialDuplicates = catchAsync(async (req, res, next) => {
 });
 
 // --- AUTHENTICATED ACTIONS ---
+// photocardController.js
+
 const createPhotocard = catchAsync(async (req, res, next) => {
+  // 1. Get and increment the atomic counter immediately
+  const sequence = await Sequence.findByIdAndUpdate(
+    "photocardCounter",
+    { $inc: { value: 1 } },
+    { new: true, upsert: true, setDefaultsOnInsert: true }
+  );
+
   const requiredFields = ["name"];
   const missingFields = requiredFields.filter((field) => !req.body[field]);
 
@@ -155,44 +206,54 @@ const createPhotocard = catchAsync(async (req, res, next) => {
     );
   }
 
-  let imageFilename = "";
+  // 2. Prepare the photocard data
+  const photocardData = preparePhotocardData(req, req.body, req.file);
+  photocardData.photocardNumber = sequence.value;
+  photocardData.createdBy = req.user._id;
 
-  // Process image if uploaded
+  if (!sequence || typeof sequence.value !== "number") {
+    return next(new AppError("Failed to generate photocard number.", 500));
+  }
+
+  if (req.body.isUnidentified === "true") {
+    photocardData.isUnidentified = true;
+    photocardData.verificationStatus = "unverified";
+  } else {
+    photocardData.isUnidentified = false;
+    photocardData.verificationStatus = "verified";
+  }
+
+  // 3. Handle image processing and attach to photocardData
   if (req.file) {
     try {
-      imageFilename = await handleImageUpload(req.file);
+      photocardData.image = await handleImageUpload(req.file);
     } catch (err) {
       return next(new AppError("Failed to process image.", 500, err));
     }
   }
 
-  const photocardData = preparePhotocardData(req, req.body, req.file);
-
+  // 4. Validate duplicate ID and clean up image if invalid
   if (
     photocardData.isConfirmedDuplicate &&
     !mongoose.Types.ObjectId.isValid(photocardData.duplicateOf)
   ) {
-    if (imageFilename) {
-      deleteImageFile(imageFilename);
+    if (photocardData.image) {
+      deleteImageFile(photocardData.image);
     }
     return next(
       new AppError("Invalid original photocard ID provided for duplicate.", 400)
     );
   }
 
-  const newPhotocard = new PhotoCard({
-    ...photocardData,
-    image: imageFilename,
-    createdBy: req.user._id,
-  });
-
-  const savedPhotocard = await newPhotocard.save();
+  // 5. Create the photocard in a single step
+  const newPhotocard = await PhotoCard.create(photocardData);
 
   sendJsonResponse(res, 201, "Photocard created successfully.", {
     photocard: {
-      id: savedPhotocard._id,
-      image: savedPhotocard.image ? "✓" : "✗",
-      name: savedPhotocard.name,
+      id: newPhotocard._id,
+      image: newPhotocard.image ? "✓" : "✗",
+      name: newPhotocard.name,
+      photocardNumber: newPhotocard.photocardNumber,
     },
   });
 });
@@ -258,34 +319,45 @@ const updatePhotocard = catchAsync(async (req, res, next) => {
   });
 });
 
-const deletePhotocard = catchAsync(async (req, res, next) => {
+const softDeletePhotocard = catchAsync(async (req, res, next) => {
+  const { id: photocardId } = req.params;
   const userId = req.user._id;
-  const photocardId = req.params.id;
 
   const photocard = await PhotoCard.findById(photocardId);
+
   if (!photocard) {
     return next(new AppError("Photocard not found.", 404));
   }
 
-  if (
-    !photocard.createdBy ||
-    photocard.createdBy.toString() !== userId.toString()
-  ) {
+  const isOwner = photocard.createdBy.toString() === userId.toString();
+  const isAdmin = req.user.role === "admin";
+
+  if (!isOwner && !isAdmin) {
     return next(new AppError("Not authorized to delete this photocard.", 403));
   }
 
+  photocard.isDeleted = true;
+  photocard.deletedAt = new Date();
+  await photocard.save();
+
+  // Delete the image from your storage
   if (isRealImage(photocard.image)) {
     deleteImageFile(photocard.image);
   }
 
-  await photocard.deleteOne();
-  await Report.deleteMany({ photocard: photocardId });
+  if (isAdmin) {
+    await resolvePendingReports(
+      photocardId,
+      userId,
+      "Admin deleted photocard."
+    );
+  }
 
-  sendJsonResponse(
-    res,
-    200,
-    "Photocard and associated reports deleted successfully."
-  );
+  const message = isAdmin
+    ? "Photocard marked as deleted by admin and reports resolved."
+    : "Photocard marked as deleted successfully.";
+
+  sendJsonResponse(res, 200, message);
 });
 
 // --- ADMIN ACTIONS ---
@@ -296,12 +368,14 @@ const getPhotocardCounts = catchAsync(async (req, res) => {
   const [
     flaggedCount,
     blockedCount,
+    deletedCount,
     duplicateCount,
     unidentifiedCount,
     totalCount,
   ] = await Promise.all([
     PhotoCard.countDocuments({ flagged: true, blocked: false }),
     PhotoCard.countDocuments({ blocked: true }),
+    PhotoCard.countDocuments({ isDeleted: true }),
     PhotoCard.countDocuments({ isConfirmedDuplicate: true }),
     PhotoCard.countDocuments({ isUnidentified: true }),
     PhotoCard.countDocuments({}),
@@ -311,6 +385,7 @@ const getPhotocardCounts = catchAsync(async (req, res) => {
     counts: {
       flagged: flaggedCount,
       blocked: blockedCount,
+      deleted: deletedCount,
       duplicates: duplicateCount,
       unidentified: unidentifiedCount,
       total: totalCount,
@@ -326,11 +401,15 @@ const getPhotocardsByStatus = catchAsync(async (req, res) => {
     query = { flagged: true, blocked: false };
   } else if (status === "blocked") {
     query = { blocked: true };
-  } else if (status === "flagged-blocked") {
+  } else if (status === "both") {
     query = { $or: [{ flagged: true }, { blocked: true }] };
   } else {
-    // Return all photocards if no status is specified
-    query = {};
+    return sendJsonResponse(
+      res,
+      200,
+      `No photocards found for status: ${status}.`,
+      { photocards: [] }
+    );
   }
 
   const photocards = await PhotoCard.find(query)
@@ -339,6 +418,31 @@ const getPhotocardsByStatus = catchAsync(async (req, res) => {
 
   sendJsonResponse(res, 200, `Photocards fetched successfully.`, {
     photocards,
+  });
+});
+
+const getPhotocardAdmin = catchAsync(async (req, res, next) => {
+  const photocard = await PhotoCard.findById(
+    req.params.id
+  ).withCreatorDetails();
+
+  if (!photocard) {
+    return next(new AppError("Photocard not found", 404));
+  }
+
+  // Admin can see ALL photocards, even deleted/provisional ones
+  sendJsonResponse(res, 200, "Photocard fetched successfully.", {
+    photocard,
+  });
+});
+
+const getDeletedPhotocards = catchAsync(async (req, res) => {
+  const deletedPhotocards = await PhotoCard.find({ isDeleted: true })
+    .populate("createdBy", "username")
+    .sort({ deletedAt: -1 });
+
+  sendJsonResponse(res, 200, "Deleted photocards fetched successfully.", {
+    deletedPhotocards,
   });
 });
 
@@ -421,24 +525,58 @@ const unblockPhotocard = catchAsync(async (req, res, next) => {
   sendJsonResponse(res, 200, "Photocard has been unblocked.", { photocard });
 });
 
-const deletePhotocardByAdmin = catchAsync(async (req, res, next) => {
-  const photocard = await PhotoCard.findById(req.params.id);
+const restoreDeletedPhotocard = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const photocard = await PhotoCard.findById(id);
   if (!photocard) {
     return next(new AppError("Photocard not found.", 404));
   }
 
-  if (isRealImage(photocard.image)) {
-    await deleteImageFile(photocard.image);
+  if (!photocard.isDeleted) {
+    return next(new AppError("Photocard is not deleted.", 400));
   }
 
-  await photocard.deleteOne();
-  await Report.deleteMany({ photocard: photocard._id });
+  //Restore the photocard
+  photocard.isDeleted = false;
+  photocard.deletedAt = null;
+  await photocard.save();
 
-  sendJsonResponse(
-    res,
-    200,
-    "Photocard and associated reports deleted successfully."
-  );
+  sendJsonResponse(res, 200, "Photocard restored successfully.", { photocard });
+});
+
+const deletePhotocardPermanently = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const photocard = await PhotoCard.findById(id);
+  if (!photocard) {
+    return next(new AppError("Photocard not found.", 404));
+  }
+
+  if (!photocard.isDeleted) {
+    return next(
+      new AppError(
+        "Photocard must be soft-deleted before permanent deletion. Please soft-delete it first.",
+        400
+      )
+    );
+  }
+
+  /*const timeSinceDeletion = new Date() - new Date(photocard.deletedAt);
+  const minDeletionTime = 24 * 60 * 60 * 1000; // 24 hrs
+
+  if (timeSinceDeletion < minDeletionTime) {
+    return next(
+      new AppError(
+        "Photocard was deleted recently. Please wait 24 hours before permanent deletion.",
+        400
+      )
+    );
+  }*/
+
+  await PhotoCard.findByIdAndDelete(id);
+
+  sendJsonResponse(res, 200, "Photocard permanently deleted successfully.");
 });
 
 // --- Duplicate Functions ---
@@ -593,7 +731,8 @@ const unflagDuplicate = catchAsync(async (req, res, next) => {
 module.exports = {
   // Public
   getAllPhotocards,
-  getPhotocardById,
+  getPhotocard,
+  searchPhotocards,
   checkExistingPhotocards,
   getPotentialDuplicates,
 
@@ -601,15 +740,18 @@ module.exports = {
   createPhotocard,
   getUserPhotocards,
   updatePhotocard,
-  deletePhotocard,
+  softDeletePhotocard,
 
   // Admin
   getPhotocardCounts,
   getPhotocardsByStatus,
+  getPhotocardAdmin,
+  getDeletedPhotocards,
   unflagPhotocard,
   blockPhotocard,
   unblockPhotocard,
-  deletePhotocardByAdmin,
+  restoreDeletedPhotocard,
+  deletePhotocardPermanently,
   getDuplicatePhotocards,
   getDuplicateComparison,
   getSuspectedDuplicateComparison,

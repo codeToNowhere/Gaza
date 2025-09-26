@@ -13,18 +13,18 @@ router.use(authenticateToken);
 router.use(adminOnly);
 
 // --- PHOTOCARD ADMIN ROUTES ---
-router.get("/photocards", photocardController.getPhotocardsByStatus);
+
 router.get("/photocards/counts", photocardController.getPhotocardCounts);
+
 router.get(
   "/photocards/duplicates",
   photocardController.getDuplicatePhotocards
 );
+router.get("/photocards/deleted", photocardController.getDeletedPhotocards);
 
 router.put("/photocards/:id/block", photocardController.blockPhotocard);
 router.put("/photocards/:id/unblock", photocardController.unblockPhotocard);
 router.put("/photocards/:id/unflag", photocardController.unflagPhotocard);
-
-router.delete("/photocards/:id", photocardController.deletePhotocardByAdmin);
 
 router.get(
   "/photocards/compare/:id",
@@ -35,6 +35,7 @@ router.get(
   photocardController.getSuspectedDuplicateComparison
 );
 
+router.get("/photocards", photocardController.getPhotocardsByStatus);
 router.put(
   "/photocards/confirm-duplicate",
   adminOnly,
@@ -45,6 +46,17 @@ router.put(
   photocardController.unflagDuplicate
 );
 
+router.put(
+  "/photocards/:id/restore",
+  photocardController.restoreDeletedPhotocard
+);
+router.delete(
+  "/photocards/:id",
+  photocardController.deletePhotocardPermanently
+);
+
+router.get("/photocards/:id", photocardController.getPhotocardAdmin);
+
 // --- VERIFICATION ADMIN ROUTES ---
 router.get(
   "/verifications/pending",
@@ -54,11 +66,11 @@ router.get(
   "/verifications/:verificationId",
   verificationController.getVerificationById
 );
-router.put(
+router.patch(
   "/verifications/:verificationId/approve",
   verificationController.approveVerification
 );
-router.put(
+router.patch(
   "/verifications/:verificationId/reject",
   verificationController.rejectVerification
 );
@@ -72,7 +84,7 @@ router.get("/users/counts", authController.getUserCounts);
 
 // --- REPORT ADMIN ROUTES ---
 router.get("/reports", reportController.getAllReports);
-router.get("/reports/:itedmId", reportController.getReportsByItem);
+router.get("/reports/:itemId", reportController.getReportsByItem);
 router.get("/reports/counts", reportController.getReportCounts);
 
 router.put("/reports/:reportId/status", reportController.updateReportStatus);

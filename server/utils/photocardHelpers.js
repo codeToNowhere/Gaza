@@ -1,5 +1,7 @@
 //photocardHelpers.js
 
+const { default: mongoose } = require("mongoose");
+
 // Photocard form data
 const preparePhotocardData = (req, body, file) => {
   const data = {
@@ -48,4 +50,23 @@ const duplicatePhotocardsQuery = (name, age, months) => {
   return query;
 };
 
-module.exports = { preparePhotocardData, duplicatePhotocardsQuery };
+// Photocard number IDs for searching
+const buildPhotocardQuery = (param) => {
+  let query = {};
+  const isNumber = !isNaN(param) && !isNaN(parseFloat(param));
+
+  if (isNumber) {
+    query.photocardNumber = parseInt(param);
+  } else if (mongoose.Types.ObjectId.isValid(param)) {
+    query._id = param;
+  } else {
+    query.name = { $regex: param, $options: "i" };
+  }
+  return query;
+};
+
+module.exports = {
+  preparePhotocardData,
+  duplicatePhotocardsQuery,
+  buildPhotocardQuery,
+};

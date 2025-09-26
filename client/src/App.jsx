@@ -24,8 +24,18 @@ import Spinner from "./components/Spinner";
 
 const App = () => {
   const { user } = useAuth();
-  const { photocards, loadingPhotocards, counts, error, refreshPhotocards } =
-    usePhotocardData();
+
+  const filters = useMemo(() => ({}), []);
+
+  const {
+    photocards,
+    loadingPhotocards,
+    counts,
+    error,
+    refreshPhotocards,
+    pagination,
+    goToPage,
+  } = usePhotocardData(filters);
 
   const userPhotocards = useMemo(() => {
     if (!photocards || !user) return [];
@@ -53,6 +63,9 @@ const App = () => {
                   refreshPhotocards={refreshPhotocards}
                   counts={counts}
                   error={error}
+                  loadingPhotocards={loadingPhotocards}
+                  pagination={pagination}
+                  goToPage={goToPage}
                 />
               )
             }
@@ -61,17 +74,10 @@ const App = () => {
             path="/my-photocards"
             element={
               <ProtectedRoute>
-                {loadingPhotocards ? (
-                  <div className="loading-container">
-                    <Spinner />
-                    <p>Loading your photocards...</p>
-                  </div>
-                ) : (
-                  <MyPhotocards
-                    photocards={userPhotocards}
-                    refreshPhotocards={refreshPhotocards}
-                  />
-                )}
+                <MyPhotocards
+                  photocards={userPhotocards}
+                  refreshPhotocards={refreshPhotocards}
+                />
               </ProtectedRoute>
             }
           />

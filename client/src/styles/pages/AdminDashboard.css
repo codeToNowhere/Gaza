@@ -107,6 +107,18 @@
   transform: translateY(-5px);
 }
 
+.admin-photocard-item .photocard-number {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c5aa0;
+  margin-bottom: 0.5rem;
+}
+
+.admin-photocard-item.deleted .photocard-number {
+  color: #666;
+  text-decoration: line-through;
+}
+
 .photocard-click-area {
   box-sizing: border-box;
   cursor: pointer;
@@ -446,4 +458,45 @@
     font-size: 0.85em;
     padding: 6px 10px;
   }
+}
+
+/* Add to AdminDashboard.css */
+.verifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.verification-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #f9f9f9;
+  color: #000;
+}
+
+.verification-info h4 {
+  margin: 0 0 0.5rem 0;
+  color: #000;
+}
+
+.review-button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.review-button:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.review-button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
 }

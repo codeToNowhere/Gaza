@@ -11,6 +11,7 @@ import BackToTopButton from "../components/BackToTopButton";
 import Spinner from "../components/Spinner";
 // Modals
 import BioDisplayModal from "../modals/BioDisplayModal";
+import IdentifyPersonModal from "../modals/IdentifyPersonModal";
 import ReportModal from "../modals/ReportModal";
 // Utilities
 import {
@@ -19,11 +20,10 @@ import {
   getBorderClass,
   getPhotocardImageSrc,
 } from "../utils/photocardUtils";
+import { getErrorMessage } from "../utils/getErrorMessage";
 // Styles & Icons
 import "../styles/pages/BioDetailPage.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faL } from "@fortawesome/free-solid-svg-icons";
-import { text } from "@fortawesome/fontawesome-svg-core";
 
 const BioDetailPage = () => {
   const { id } = useParams();
@@ -44,6 +44,8 @@ const BioDetailPage = () => {
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [isBioDisplayModalOpen, setIsBioDisplayModalOpen] = useState(false);
   const [bioDisplayModalPhotoId, setBioDisplayModalPhotoId] = useState(null);
+  const [isIdentifyPersonModalOpen, setIsIdentifyPersonModalOpen] =
+    useState(false);
 
   // --- UTILITY & FETCH FUNCTIONS ---
   const openBioDisplayModal = useCallback((photocardIdToDisplay) => {
@@ -113,10 +115,10 @@ const BioDetailPage = () => {
           setDuplicatePhotocard(duplicateData);
         }
       } catch (err) {
-        const errorMessage =
-          err.response?.data?.message ||
-          err.message ||
-          "Failed to fetch photocard details.";
+        const errorMessage = getErrorMessage(
+          err,
+          "Failed to fetch photocard details."
+        );
 
         setError(errorMessage);
 
@@ -141,7 +143,10 @@ const BioDetailPage = () => {
           const filtered = applyFilters(allFetchedPhotocards, [], "", true);
           const ids = filtered.map((p) => p._id);
 
+          const currentIdx = ids.findIndex((pid) => pid === id);
+
           setPhotocardIds(ids);
+          setCurrentIndex(currentIdx);
         } catch (err) {
           console.error("Failed to fetch all photocards for fallback.", err);
         }
@@ -161,8 +166,18 @@ const BioDetailPage = () => {
   // --- NAVIGATION HANDLERS ---
   const goToPhotocard = useCallback(
     (newIndex) => {
-      if (newIndex >= 0 && newIndex < photocardIds.length) {
-        navigate(`/bio/${photocardIds[newIndex]}`, { state: location.state });
+      if (
+        photocardIds.length > 0 &&
+        newIndex >= 0 &&
+        newIndex < photocardIds.length
+      ) {
+        navigate(`/bio/${photocardIds[newIndex]}`, {
+          state: {
+            ...location.state,
+            photocardsList: photocardIds,
+            initialIndex: newIndex,
+          },
+        });
       } else {
         navigate("/");
       }
@@ -266,6 +281,59 @@ const BioDetailPage = () => {
     [photocard, openMessage, closeMessage]
   );
 
+  const handleIdentifyClick = () => {
+    setIsIdentifyPersonModalOpen(true);
+  };
+
+  const handleCloseIdentificationModal = useCallback(() => {
+    setIsIdentifyPersonModalOpen(false);
+  }, []);
+
+  const handleIdentificationSuccess = useCallback(
+    async (identificationData) => {
+      try {
+        // Option 1: If your API returns the updated photocard
+        if (identificationData?.updatedPhotocard) {
+          setPhotocard(identificationData.updatedPhotocard);
+        }
+        // Option 2: If not, refetch the current photocard
+        else {
+          const updatedPhotocard = await fetchSinglePhotocardById(id);
+          if (updatedPhotocard) {
+            setPhotocard(updatedPhotocard);
+          }
+        }
+
+        // Show success message
+        openMessage(
+          "Identification Submitted",
+          "Thank you! Your identification has been submitted for review.",
+          "success",
+          closeMessage,
+          [{ text: "OK", onClick: closeMessage }]
+        );
+
+        // Close the modal
+        setIsIdentifyPersonModalOpen(false);
+      } catch (err) {
+        // Fallback: still update optimistically and show message
+        setPhotocard((prev) => ({
+          ...prev,
+          isUnidentified: false,
+        }));
+
+        openMessage(
+          "Identification Submitted",
+          "Thank you! Your identification has been submitted for review.",
+          "success",
+          closeMessage,
+          [{ text: "OK", onClick: closeMessage }]
+        );
+      }
+    },
+    [id, fetchSinglePhotocardById, openMessage, closeMessage]
+  );
+
   // --- PRE-RENDER LOGIC ---
   if (loading) {
     return <Spinner />;
@@ -315,7 +383,9 @@ const BioDetailPage = () => {
           className="circle-button"
           onClick={goToNext}
           aria-label="Go to next filtered photocard"
-          disabled={isSubmittingReport || currentIndex >= photocards.length - 1}
+          disabled={
+            isSubmittingReport || currentIndex >= photocardIds.length - 1
+          }
         >
           <FontAwesomeIcon icon="arrow-right" />
         </button>
@@ -323,6 +393,16 @@ const BioDetailPage = () => {
 
       <div className="bio-info">
         <h2>{photocard.name}</h2>
+
+        {photocard.isUnidentified && user && !user.isBlocked && (
+          <button
+            className="identify-button"
+            onClick={handleIdentifyClick}
+            title="I know this person"
+          >
+            Identify
+          </button>
+        )}
 
         {user &&
           photocard.createdBy &&
@@ -445,6 +525,12 @@ const BioDetailPage = () => {
         isOpen={isBioDisplayModalOpen}
         onClose={closeBioDisplayModal}
         photocardId={bioDisplayModalPhotoId}
+      />
+      <IdentifyPersonModal
+        photocard={photocard}
+        isOpen={isIdentifyPersonModalOpen}
+        onClose={handleCloseIdentificationModal}
+        onSuccess={handleIdentificationSuccess}
       />
     </div>
   );

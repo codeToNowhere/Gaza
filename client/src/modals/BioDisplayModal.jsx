@@ -9,9 +9,10 @@ import {
   getBorderClass,
   getPhotocardImageSrc,
 } from "../utils/photocardUtils";
+import { getErrorMessage } from "../utils/getErrorMessage";
 import "../styles/modals/Modals.css";
 
-const BioDisplayModal = ({ isOpen, onClose, photocardId }) => {
+const BioDisplayModal = ({ isOpen, onClose, photocardId, isAdmin }) => {
   const [photocard, setPhotocard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -23,7 +24,10 @@ const BioDisplayModal = ({ isOpen, onClose, photocardId }) => {
       setError(null);
       const fetchPhotocard = async () => {
         try {
-          const response = await apiClient.get(`/photocards/${photocardId}`);
+          const endpoint = isAdmin
+            ? `/admin/photocards/${photocardId}`
+            : `/photocards/${photocardId}`;
+          const response = await apiClient.get(endpoint);
           if (response.data.success) {
             setPhotocard(response.data.photocard);
           } else {
@@ -32,8 +36,7 @@ const BioDisplayModal = ({ isOpen, onClose, photocardId }) => {
             );
           }
         } catch (err) {
-          const errorMessage =
-            err.response?.data?.message || err.message || "Failed to load bio.";
+          const errorMessage = getErrorMessage(err, "Failed to load bio.");
           setError(errorMessage);
           openMessage("Error", errorMessage, "error");
         } finally {
@@ -42,7 +45,7 @@ const BioDisplayModal = ({ isOpen, onClose, photocardId }) => {
       };
       fetchPhotocard();
     }
-  }, [isOpen, photocardId, openMessage]);
+  }, [isOpen, photocardId, openMessage, isAdmin]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -117,6 +120,7 @@ BioDisplayModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   photocardId: PropTypes.string,
+  isAdmin: PropTypes.bool,
 };
 
 export default BioDisplayModal;

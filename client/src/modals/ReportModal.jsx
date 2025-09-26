@@ -164,7 +164,7 @@ const ReportModal = ({
 
   return (
     <div
-      className="modal-verlay report-modal-overlay"
+      className="modal-overlay report-modal-overlay"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -175,7 +175,7 @@ const ReportModal = ({
         ref={modalRef}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="report-mondal-title" className="modal-title">
+        <h2 id="report-modal-title" className="modal-title">
           Report Content
         </h2>
         <button

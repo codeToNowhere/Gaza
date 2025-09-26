@@ -11,6 +11,8 @@ import { useMessage } from "../context/MessageContext";
 // Components
 import BackToTopButton from "../components/BackToTopButton";
 import Photocard from "../components/Photocard";
+// Utilities
+import { getErrorMessage } from "../utils/getErrorMessage";
 // Styles
 import "../styles/pages/MyPhotocards.css";
 
@@ -50,10 +52,10 @@ const MyPhotocards = memo(function MyPhotocards({
             refreshPhotocards();
             showToast("Photocard deleted successfully!", "success");
           } catch (err) {
-            const errorMessage =
-              err.response?.data?.message ||
-              err.message ||
-              "Failed to delete photocard. Please try again.";
+            const errorMessage = getErrorMessage(
+              err,
+              "Failed to delete photocard. Please try again."
+            );
             showToast(`Delete failed: ${errorMessage}`, "error");
           } finally {
             setIsDeleting(false);

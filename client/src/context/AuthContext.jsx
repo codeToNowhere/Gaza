@@ -10,6 +10,7 @@ import {
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useToast } from "./ToastContext";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
@@ -324,9 +325,10 @@ export const AuthProvider = ({ children }) => {
           throw new Error("Invalid response from server during login.");
         }
       } catch (err) {
-        const errorMessage =
-          err.response?.data?.message ||
-          "Login failed. Please check your credentials.";
+        const errorMessage = getErrorMessage(
+          err,
+          "Login failed. Please check your credentials."
+        );
         setAuthError(errorMessage);
         showToast(errorMessage, "error");
         throw new Error(errorMessage);
@@ -360,9 +362,10 @@ export const AuthProvider = ({ children }) => {
           );
         }
       } catch (err) {
-        const errorMessage =
-          err.response?.data?.message ||
-          "Registration failed. Please try again.";
+        const errorMessage = getErrorMessage(
+          err,
+          "Registration failed. Please try again."
+        );
         setAuthError(errorMessage);
         showToast(errorMessage, "error");
         throw new Error(errorMessage);

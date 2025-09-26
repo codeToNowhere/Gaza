@@ -1,21 +1,19 @@
 // FilterBar.jsx
-// --- IMPORTS ---
 import { useEffect, useState, useRef, useCallback, memo, useMemo } from "react";
 import "../styles/components/FilterBar.css";
 
 const FilterBar = memo(function FilterBar(props) {
   const {
-    categories = ["Detained", "Deceased", "Missing"],
+    categories = ["Injured", "Deceased", "Missing"],
     selectedFilters,
     setSelectedFilters,
     showFlaggedDuplicates,
     setShowFlaggedDuplicates,
-    onFilterChange,
-    currentFilters,
+    unidentifiedFilter,
+    setUnidentifiedFilter,
   } = props;
 
   const [showDropdown, setShowDropdown] = useState(false);
-  const [excludeUnidentified, setExcludeUnidentified] = useState(false);
   const dropdownRef = useRef(null);
 
   const toggleCategory = useCallback(
@@ -35,10 +33,9 @@ const FilterBar = memo(function FilterBar(props) {
     );
   }, [setSelectedFilters, categories]);
 
-  const handleToggleUnidentified = (e) => {
-    const checked = e.target.checked;
-    setExcludeUnidentified(checked);
-    onFilterChange({ ...currentFilters, excludeUnidentified: checked });
+  const handleUnidentifiedFilterChange = (e) => {
+    const value = e.target.value;
+    setUnidentifiedFilter(value);
   };
 
   const handleToggleShowFlaggedDuplicates = useCallback(() => {
@@ -109,15 +106,43 @@ const FilterBar = memo(function FilterBar(props) {
               </label>
             ))}
             <hr className="dropdown-divider" />
-            <label htmlFor="unidentified">
-              <input
-                type="checkbox"
-                id="show-unidentified-photocards"
-                checked={excludeUnidentified}
-                onChange={handleToggleUnidentified}
-              />
-              Unidentified
-            </label>
+
+            <div className="unidentified-filter-group">
+              <label>Show:</label>
+              <label htmlFor="unidentified-all">
+                <input
+                  type="radio"
+                  id="unidentified-all"
+                  name="unidentifiedFilter"
+                  value="all"
+                  checked={unidentifiedFilter === "all"}
+                  onChange={handleUnidentifiedFilterChange}
+                />
+                All
+              </label>
+              <label htmlFor="unidentified-identified">
+                <input
+                  type="radio"
+                  id="unidentified-identified"
+                  name="unidentifiedFilter"
+                  value="identified"
+                  checked={unidentifiedFilter === "identified"}
+                  onChange={handleUnidentifiedFilterChange}
+                />
+                Identified Only
+              </label>
+              <label htmlFor="unidentified-unidentified">
+                <input
+                  type="radio"
+                  id="unidentified-unidentified"
+                  name="unidentifiedFilter"
+                  value="unidentified"
+                  checked={unidentifiedFilter === "unidentified"}
+                  onChange={handleUnidentifiedFilterChange}
+                />
+                Unidentified Only
+              </label>
+            </div>
 
             <label htmlFor="show-flagged-duplicates-checkbox">
               <input

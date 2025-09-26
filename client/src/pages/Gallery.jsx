@@ -3,32 +3,44 @@
 // React & Router Hooks
 import { useNavigate } from "react-router-dom";
 import { useState, useCallback, useMemo } from "react";
-//Context
+
+// Context
 import { useMessage } from "../context/MessageContext";
 import { apiClient, useAuth } from "../context/AuthContext";
+
 // Components
 import BackToTopButton from "../components/BackToTopButton";
 import FilterBar from "../components/FilterBar";
+import Pagination from "../components/Pagination";
 import Photocard from "../components/Photocard";
+
 // Modals
 import BioDisplayModal from "../modals/BioDisplayModal";
 import ReportModal from "../modals/ReportModal";
+
 // Utilities
 import { applyFilters } from "../utils/photocardUtils";
+
 // Styles
 import "../styles/pages/Gallery.css";
 
-const Gallery = ({ photocards, refreshPhotocards, counts }) => {
+const Gallery = ({
+  photocards,
+  refreshPhotocards,
+  counts,
+  loadingPhotocards,
+  pagination,
+  goToPage,
+}) => {
   // --- HOOKS & STATE MANAGEMENT ---
-
   const navigate = useNavigate();
   const { user } = useAuth();
   const { openMessage } = useMessage();
 
   const [selectedFilters, setSelectedFilters] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
   const [showFlaggedDuplicates, setShowFlaggedDuplicates] = useState(true);
-  const [excludeUnidentified, setExcludeUnidentified] = useState(false);
+  const [unidentifiedFilter, setUnidentifiedFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [isBioDisplayModalOpen, setIsBioDisplayModalOpen] = useState(false);
   const [bioDisplayModalPhotoId, setBioDisplayModalPhotoId] = useState(null);
@@ -39,19 +51,17 @@ const Gallery = ({ photocards, refreshPhotocards, counts }) => {
   // --- EVENT HANDLERS ---
   const handleCardClick = useCallback(
     (id) => {
-      navigate(`/bio/${id}`, {
-        state: {
-          filters: selectedFilters,
-          search: searchQuery,
-          showFlaggedDuplicates: showFlaggedDuplicates,
-        },
-      });
+      navigate(`/bio/${id}`);
     },
-    [navigate, selectedFilters, searchQuery, showFlaggedDuplicates]
+    [navigate]
   );
 
   const handleSearchChange = useCallback((e) => {
     setSearchQuery(e.target.value);
+  }, []);
+
+  const clearSearch = useCallback(() => {
+    setSearchQuery("");
   }, []);
 
   const handleOpenReportModal = useCallback((photocard) => {
@@ -140,24 +150,26 @@ const Gallery = ({ photocards, refreshPhotocards, counts }) => {
       applyFilters(
         photocards,
         selectedFilters,
-        searchQuery,
         showFlaggedDuplicates,
-        excludeUnidentified
+        unidentifiedFilter,
+        searchQuery
       ),
     [
       photocards,
       selectedFilters,
-      searchQuery,
       showFlaggedDuplicates,
-      excludeUnidentified,
+      unidentifiedFilter,
+      searchQuery,
     ]
   );
+
+  const isSearching = searchQuery.length > 0;
 
   // --- RENDER ---
   return (
     <section className="gallery-page" aria-labelledby="gallery-title">
       <h1 id="gallery-title" className="title-base title">
-        AID GAZA
+        TITLE
       </h1>
       <h2 id="gallery-subtitle" className="title-base subtitle">
         Gallery
@@ -169,21 +181,53 @@ const Gallery = ({ photocards, refreshPhotocards, counts }) => {
           setSelectedFilters={setSelectedFilters}
           showFlaggedDuplicates={showFlaggedDuplicates}
           setShowFlaggedDuplicates={setShowFlaggedDuplicates}
-          excludeUnidentified={excludeUnidentified}
-          setExcludeUnidentified={setExcludeUnidentified}
+          unidentifiedFilter={unidentifiedFilter}
+          setUnidentifiedFilter={setUnidentifiedFilter}
         />
-        <label htmlFor="search-input" className="visually-hidden">
-          Search photocards
-        </label>
-        <input
-          type="text"
-          id="search-input"
-          placeholder="Search"
-          value={searchQuery}
-          onChange={handleSearchChange}
-          className="search-input"
-          aria-label="Search photocards"
-        />
+
+        <div className="search-container">
+          <label htmlFor="search-input" className="visually-hidden">
+            Search photocards
+          </label>
+          <div className="search-input-wrapper">
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Search by name or number"
+              onChange={handleSearchChange}
+              value={searchQuery}
+              className="search-input"
+              aria-label="Search photocards"
+            />
+            {isSearching && (
+              <button
+                type="button"
+                className="search-clear-btn"
+                onClick={clearSearch}
+                aria-label="Clear search"
+              >
+                {" "}
+                ×
+              </button>
+            )}
+          </div>
+          {isSearching && (
+            <div className="search-info">
+              <span>
+                Found {filteredPhotocards.length} results for "{searchQuery}"{" "}
+                {filteredPhotocards.length !== photocards.length &&
+                  ` (filtered from ${photocards.length} total)`}
+              </span>
+              <button
+                type="button"
+                className="search-reset-btn"
+                onClick={clearSearch}
+              >
+                Clear search
+              </button>
+            </div>
+          )}
+        </div>
         <div
           className="photocard-counts"
           role="status"
@@ -194,7 +238,7 @@ const Gallery = ({ photocards, refreshPhotocards, counts }) => {
             Missing:<span className="count-value">{counts.missing}</span>
           </p>
           <p>
-            Detained:<span className="count-value">{counts.detained}</span>
+            Injured:<span className="count-value">{counts.injured}</span>
           </p>
           <p>
             Deceased:<span className="count-value">{counts.deceased}</span>
@@ -205,7 +249,9 @@ const Gallery = ({ photocards, refreshPhotocards, counts }) => {
         </div>
       </div>
       <div className="gallery-container" role="grid">
-        {filteredPhotocards.length === 0 ? (
+        {loadingPhotocards ? (
+          <p className="loading-message">Loading photocards...</p>
+        ) : filteredPhotocards.length === 0 ? (
           <p className="no-results" role="status" aria-live="polite">
             No photocards match your search or filters. Please adjust your
             criteria.
@@ -222,6 +268,10 @@ const Gallery = ({ photocards, refreshPhotocards, counts }) => {
           ))
         )}
       </div>
+
+      {!isSearching && (
+        <Pagination pagination={pagination} onPageChange={goToPage} />
+      )}
 
       <BackToTopButton />
 
