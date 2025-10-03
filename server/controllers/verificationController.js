@@ -4,6 +4,10 @@ const PhotoCard = require("../models/PhotoCard");
 const Verification = require("../models/Verification");
 const AppError = require("../utils/AppError");
 const catchAsync = require("../utils/catchAsync");
+const {
+  generateIdentifiedNumber,
+  generateTemporaryNumber,
+} = require("../utils/photocardNumberUtils");
 const { sendJsonResponse } = require("../utils/responseHelpers");
 const {
   validateVerification,
@@ -93,6 +97,7 @@ const getPendingVerifications = catchAsync(async (req, res) => {
   });
 });
 
+// Approve Verification
 const approveVerification = catchAsync(async (req, res, next) => {
   const { verificationId } = req.params;
 
@@ -103,16 +108,11 @@ const approveVerification = catchAsync(async (req, res, next) => {
   validateVerification(verification);
 
   const originalNumber = verification.originalPhotocard.photocardNumber;
-  const identifiedNumber = originalNumber
-    ? `${originalNumber.toString().padStart(3, "0")}ID`
-    : null;
-
-  const deletedNumber = originalNumber
-    ? `DELETED_${originalNumber}_${Date.now()}`
-    : `DELETED_${Date.now()}`;
+  const identifiedNumber = generateIdentifiedNumber(originalNumber);
+  const tempNumber = generateTemporaryNumber(originalNumber);
 
   await PhotoCard.findByIdAndUpdate(verification.originalPhotocard._id, {
-    photocardNumber: deletedNumber,
+    photocardNumber: tempNumber,
   });
 
   const approvedPhotocard = await PhotoCard.findByIdAndUpdate(
@@ -152,9 +152,10 @@ const approveVerification = catchAsync(async (req, res, next) => {
   });
 });
 
+// Reject Verification
 const rejectVerification = catchAsync(async (req, res, next) => {
   const { verificationId } = req.params;
-  const { comments } = req.body;
+  const { comments } = req.body || {};
 
   const verification = await Verification.findById(verificationId).populate(
     "provisionalPhotocard"

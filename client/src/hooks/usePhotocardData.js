@@ -27,7 +27,7 @@ export const usePhotocardData = (filters = {}) => {
     try {
       const params = new URLSearchParams();
       params.append("page", page);
-      params.append("limit", 100);
+      params.append("limit", 20);
 
       if (currentFilters.excludeUnidentified) {
         params.append("excludeUnidentified", "true");

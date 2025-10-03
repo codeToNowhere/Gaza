@@ -23,6 +23,14 @@ const Navbar = memo(function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-left-content">
+        <img
+          src="https://flagcdn.com/40x30/ps.png"
+          srcSet="https://flagcdn.com/80x60/ps.png 2x,
+    https://flagcdn.com/120x90/ps.png 3x"
+          width="40"
+          height="30"
+          alt="Palestine"
+        />{" "}
         {user && <span className="navbar-user">Hi, {user.username}</span>}
       </div>
 

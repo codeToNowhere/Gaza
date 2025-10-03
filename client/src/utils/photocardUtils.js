@@ -19,7 +19,7 @@ const STATUS_MAP = {
     label: "label-deceased",
   },
   Missing: {
-    color: "#ff0000",
+    color: "#CE1126",
     border: "border-missing",
     label: "label-missing",
   },
@@ -107,22 +107,22 @@ export const getPhotocardImageSrc = (photocard) => {
 export const formatPhotocardNumber = (number) => {
   if (!number && number !== 0) return "N/A";
 
+  // Handle identified cards: "26ID" → "#026ID"
   if (typeof number === "string" && number.endsWith("ID")) {
-    // Handle identified cards: "017ID" → "#017ID"
     const baseNumber = number.replace("ID", "");
-    return `#${baseNumber}ID`;
+    const paddedNumber = baseNumber.padStart(3, "0");
+    return `#${paddedNumber}ID`;
   }
 
-  // Handle regular numbers: 17 → "#017"
+  // Handle regular numbers: 26 → "#026"
   if (typeof number === "number") {
     return `#${number.toString().padStart(3, "0")}`;
   }
 
-  // Handle string numbers without ID: "17" → "#017"
+  // Handle string numbers: "26" → "#026"
   if (typeof number === "string" && !isNaN(number)) {
     return `#${number.padStart(3, "0")}`;
   }
 
-  // Return as-is if it's already formatted or unknown format
   return `#${number}`;
 };

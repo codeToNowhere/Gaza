@@ -1,4 +1,5 @@
 // IdentificationReviewModal.jsx - Updated version
+import { useState } from "react";
 import PropTypes from "prop-types";
 import Photocard from "../components/Photocard";
 import Spinner from "../components/Spinner";
@@ -15,6 +16,8 @@ const IdentificationReviewModal = ({
   isProcessingAction,
   onPhotocardClick,
 }) => {
+  const [rejectionComments, setRejectionComments] = useState("");
+
   if (!isOpen) return null;
 
   if (!verificationInfo) {
@@ -98,74 +101,52 @@ const IdentificationReviewModal = ({
           {/* RIGHT: Provisional Identified Photocard */}
           <div className="photocard-comparison-card provisional-card">
             <h4>Proposed Identification</h4>
-            {provisionalPhotocard ? (
-              <>
-                <div onClick={() => onPhotocardClick(provisionalPhotocard._id)}>
-                  <Photocard
-                    photocard={provisionalPhotocard}
-                    showStatus={true}
-                    isProvisional={true}
-                  />
-                </div>
-                <div className="photocard-summary">
-                  <p>
-                    <strong>Name:</strong>{" "}
-                    {provisionalPhotocard.name || "Unknown"}
-                  </p>
-                  <p>
-                    <strong>Age:</strong>{" "}
-                    {provisionalPhotocard.age || "Not specified"}
-                  </p>
-                  <p>
-                    <strong>Condition:</strong>{" "}
-                    {provisionalPhotocard.condition || "Not specified"}
-                  </p>
-                  <p>
-                    <strong>Status:</strong>{" "}
-                    <span className="status-badge provisional">
-                      Provisional
-                    </span>
-                  </p>
-                  {provisionalPhotocard.biography && (
-                    <div className="bio-preview">
-                      <strong>Bio Preview:</strong>
-                      <p>
-                        {provisionalPhotocard.biography.length > 100
-                          ? `${provisionalPhotocard.biography.substring(
-                              0,
-                              100
-                            )}...`
-                          : provisionalPhotocard.biography}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <p>Provisional photocard not found.</p>
+            {provisionalPhotocard && (
+              <div onClick={() => onPhotocardClick(provisionalPhotocard._id)}>
+                <Photocard
+                  photocard={provisionalPhotocard}
+                  showStatus={true}
+                  isProvisional={true}
+                />
+              </div>
             )}
+            <div className="photocard-summary">
+              <p>
+                <strong>Name:</strong> {provisionalPhotocard?.name || "Unknown"}
+              </p>
+              <p>
+                <strong>Age:</strong>{" "}
+                {provisionalPhotocard?.age || "Not specified"}
+              </p>
+              <p>
+                <strong>Condition:</strong>{" "}
+                {provisionalPhotocard?.condition || "Not specified"}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Full Biography Display (Collapsible) */}
-        {provisionalPhotocard?.biography && (
-          <div className="full-bio-section">
-            <details>
-              <summary>
-                <strong>Full Biography</strong> (Click to expand)
-              </summary>
-              <div className="bio-content">
-                {provisionalPhotocard.biography}
-              </div>
-            </details>
-          </div>
-        )}
+        <div className="comments-section">
+          <label htmlFor="rejectionComments">
+            <strong>Comments (optional for rejection):</strong>
+          </label>
+          <textarea
+            id="rejectionComments"
+            value={rejectionComments}
+            onChange={(e) => setRejectionComments(e.target.value)}
+            placeholder="Add comments explaining rejection decision..."
+            rows="3"
+            className="comments-textarea"
+          />
+        </div>
 
-        {/* Admin Actions */}
         <div className="modal-actions">
           <button
             className="modal-btn reject-btn"
-            onClick={() => onReject(verification?._id)}
+            onClick={() => {
+              onReject(verification?._id, rejectionComments);
+              setRejectionComments("");
+            }}
             disabled={isProcessingAction || !verification?._id}
           >
             <FontAwesomeIcon icon="times" />
@@ -173,7 +154,10 @@ const IdentificationReviewModal = ({
           </button>
           <button
             className="modal-btn approve-btn"
-            onClick={() => onApprove(verification?._id)}
+            onClick={() => {
+              onApprove(verification?._id);
+              setRejectionComments("");
+            }}
             disabled={isProcessingAction || !verification?._id}
           >
             <FontAwesomeIcon icon="check" />

@@ -1,68 +1,76 @@
 /* Pagination.css */
-.pagination {
-  display: flex;
-  justify-content: center;
+
+/* === PAGINATION CONTAINER === */
+nav {
   align-items: center;
-  gap: 1rem;
-  margin: 2rem 0;
+  display: flex;
   flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin: 2rem 0;
 }
 
+/* === PAGINATION BUTTONS === */
 .pagination-btn {
-  padding: 0.5rem 1rem;
+  background: #006233;
   border: 1px solid #ddd;
-  background: white;
   border-radius: 4px;
+  color: #fff;
   cursor: pointer;
+  font-weight: 800;
+  padding: 0.5rem 1rem;
   transition: all 0.2s;
 }
 
 .pagination-btn:hover:not(:disabled) {
-  background: #f5f5f5;
+  background: #008753;
 }
 
 .pagination-btn:disabled {
-  opacity: 0.5;
+  background-color: #000;
   cursor: not-allowed;
+  opacity: 0.75;
 }
 
+/* === PAGINATION NUMBERS === */
 .pagination-numbers {
   display: flex;
   gap: 0.5rem;
 }
 
 .pagination-number {
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
   background: white;
+  border: 1px solid #ddd;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s;
   min-width: 3rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s;
+}
+
+.pagination-number.active {
+  background: #ce1126;
+  border-color: #ce1126;
+  color: white;
 }
 
 .pagination-number:hover {
   background: #f5f5f5;
 }
 
-.pagination-number.active {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
-}
-
 .pagination-ellipsis {
-  padding: 0.5rem;
   align-self: center;
+  padding: 0.5rem;
 }
 
+/* === RESPONSIVE DESIGN === */
 @media (max-width: 768px) {
   .pagination {
     gap: 0.5rem;
   }
 
   .pagination-number {
-    padding: 0.5rem;
     min-width: 2.5rem;
+    padding: 0.5rem;
   }
 }

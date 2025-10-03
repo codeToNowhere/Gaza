@@ -23,6 +23,7 @@ const photoCardSchema = new mongoose.Schema(
     blocked: { type: Boolean, default: false },
     flagged: { type: Boolean, default: false },
     isConfirmedDuplicate: { type: Boolean, default: false },
+    isSuspectedDuplicate: { type: Boolean, default: false },
     duplicateOf: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "PhotoCard",
@@ -54,6 +55,12 @@ const photoCardSchema = new mongoose.Schema(
     },
     deletedAt: {
       type: Date,
+      default: null,
+    },
+    deleteReason: { type: String, default: null },
+    replacedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PhotoCard",
       default: null,
     },
     isProvisional: { type: Boolean, default: false },

@@ -24,7 +24,7 @@
 
 /* Border colors for condition/status */
 .border-injured {
-  border-color: #006400;
+  border-color: #006233;
 }
 
 .border-deceased {
@@ -32,11 +32,11 @@
 }
 
 .border-missing {
-  border-color: #ff0000;
+  border-color: #ce1126;
 }
 
 .border-default {
-  border-color: #006400;
+  border-color: #006233;
 }
 
 .bio-buttons-top {

@@ -10,9 +10,6 @@ const DuplicateDisplayModal = ({
   isOpen,
   onClose,
   duplicatePhotocardInfo,
-  onBlock,
-  onDelete,
-  onRestore,
   isProcessingAction,
   onConfirmDuplicate,
   onPhotocardClick,
@@ -55,32 +52,6 @@ const DuplicateDisplayModal = ({
                 <div onClick={() => onPhotocardClick(originalPhotocard._id)}>
                   <Photocard photocard={originalPhotocard} />
                 </div>
-                <div className="photocard-actions-area">
-                  <button
-                    className={`action-button view-report-button ${
-                      originalPhotocard.blocked
-                        ? "unblock-button"
-                        : "block-button"
-                    }`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onBlock(originalPhotocard._id);
-                    }}
-                    title={
-                      originalPhotocard.blocked
-                        ? "Unblock Photocard"
-                        : "Block Photocard"
-                    }
-                    disabled={isProcessingAction}
-                  >
-                    <FontAwesomeIcon
-                      icon={originalPhotocard.blocked ? "check-circle" : "ban"}
-                    />
-                    {originalPhotocard.blocked
-                      ? "Unblock Original"
-                      : "Block Original"}
-                  </button>
-                </div>
               </>
             ) : (
               <p>Original photocard not found.</p>
@@ -93,44 +64,6 @@ const DuplicateDisplayModal = ({
               <>
                 <div onClick={() => onPhotocardClick(duplicatePhotocard._id)}>
                   <Photocard photocard={duplicatePhotocard} />
-                </div>
-                <div className="photocard-actions-area">
-                  <button
-                    className={`action-button view-report-button ${
-                      duplicatePhotocard.blocked
-                        ? "unblock-button"
-                        : "block-button"
-                    }`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onBlock(duplicatePhotocard._id);
-                    }}
-                    title={
-                      duplicatePhotocard.blocked
-                        ? "Unblock Photocard"
-                        : "Block Photocard"
-                    }
-                    disabled={isProcessingAction}
-                  >
-                    <FontAwesomeIcon
-                      icon={duplicatePhotocard.blocked ? "check-circle" : "ban"}
-                    />
-                    {duplicatePhotocard.blocked
-                      ? "Unblock Duplicate"
-                      : "Block Duplicate"}
-                  </button>
-                  <button
-                    className="action-button delete-button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(duplicatePhotocard._id);
-                    }}
-                    title="Delete this duplicate photocard"
-                    disabled={isProcessingAction}
-                  >
-                    <FontAwesomeIcon icon="trash" />
-                    Delete Duplicate
-                  </button>
                 </div>
               </>
             ) : (
@@ -169,9 +102,6 @@ DuplicateDisplayModal.propTypes = {
     originalPhotocard: PropTypes.object,
     duplicatePhotocard: PropTypes.object,
   }),
-  onBlock: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
-  onRestore: PropTypes.func.isRequired,
   isProcessingAction: PropTypes.bool.isRequired,
   onPhotocardClick: PropTypes.func.isRequired,
   onNotDuplicate: PropTypes.func.isRequired,

@@ -1,4 +1,5 @@
-//AdminPhotocardItem.js
+// AdminPhotocardItem.jsx
+// --- IMPORTS ---
 import { memo } from "react";
 import PropTypes from "prop-types";
 import Photocard from "./Photocard";
@@ -9,6 +10,7 @@ import {
   faBan,
   faTrashRestore,
   faTrashCan,
+  faFileAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
 import { formatPhotocardNumber } from "../utils/photocardUtils";
@@ -18,18 +20,43 @@ const AdminPhotocardItem = memo(function AdminPhotocardItem({
   user,
   onPhotocardClick,
   onBlock,
+  onUnblock,
   onRestore,
   onDelete,
   onViewReport,
   onViewDuplicates,
   isProcessingAction,
-  isDeleted, // NEW PROP
+  isDeleted = false,
 }) {
+  const isBlocked = photocard.blocked || false;
+  const isFlagged = photocard.flagged || false;
+
+  const shouldShowReport =
+    isDeleted &&
+    (photocard.deleteReason === "rejected_identification" ||
+      photocard.deleteReason === "restored_original" ||
+      photocard.deleteReason === "deleted_by_admin" ||
+      photocard.deleteReason === "replaced_by_identification" ||
+      photocard.flagged);
+
   // Function to determine which buttons to show
   const renderActions = () => {
     if (isDeleted) {
       return (
         <>
+          {shouldShowReport && onViewReport && (
+            <button
+              className="action-button view-report-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewReport(photocard._id);
+              }}
+              title="View deletion report and comments"
+              disabled={isProcessingAction}
+            >
+              <FontAwesomeIcon icon={faFileAlt} /> View Report
+            </button>
+          )}
           <button
             className="action-button restore-button"
             onClick={(e) => {
@@ -47,7 +74,7 @@ const AdminPhotocardItem = memo(function AdminPhotocardItem({
               e.stopPropagation();
               onDelete(photocard._id);
             }}
-            title="Permanently delete this photocard."
+            title="Permanently delete this photocard"
             disabled={isProcessingAction}
           >
             <FontAwesomeIcon icon={faTrashCan} /> Delete Permanently
@@ -57,37 +84,32 @@ const AdminPhotocardItem = memo(function AdminPhotocardItem({
     } else {
       return (
         <>
-          <button
-            className={`action-button ${
-              photocard.blocked ? "unblock-button" : "block-button"
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onBlock(photocard._id);
-            }}
-            title={
-              photocard.blocked
-                ? "Unblock this photocard."
-                : "Block this photocard."
-            }
-            disabled={isProcessingAction}
-          >
-            <FontAwesomeIcon icon={faBan} />{" "}
-            {photocard.blocked ? "Unblock" : "Block"}
-          </button>
-          {photocard.flagged && (
+          {isBlocked ? (
             <button
-              className="action-button unflag-button"
+              className="action-button unblock-button"
               onClick={(e) => {
                 e.stopPropagation();
-                onRestore(photocard._id);
+                onUnblock(photocard._id);
               }}
-              title="Unflag this photocard."
               disabled={isProcessingAction}
+              title="Unblock photocard"
             >
-              <FontAwesomeIcon icon={faFlag} /> Unflag
+              <FontAwesomeIcon icon="check-circle" /> Unblock
+            </button>
+          ) : (
+            <button
+              className="action-button block-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onBlock(photocard._id);
+              }}
+              disabled={isProcessingAction}
+              title="Block photocard from gallery"
+            >
+              <FontAwesomeIcon icon="ban" /> Block
             </button>
           )}
+
           <button
             className="action-button delete-button"
             onClick={(e) => {
@@ -99,6 +121,19 @@ const AdminPhotocardItem = memo(function AdminPhotocardItem({
           >
             <FontAwesomeIcon icon={faTrashCan} /> Delete
           </button>
+          {isFlagged && onViewReport && (
+            <button
+              className="action-button view-report-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewReport(photocard._id, "photocard");
+              }}
+              title="View latest report details for this photocard."
+              disabled={isProcessingAction}
+            >
+              <FontAwesomeIcon icon={faFlag} /> View Report
+            </button>
+          )}
         </>
       );
     }
@@ -117,11 +152,6 @@ const AdminPhotocardItem = memo(function AdminPhotocardItem({
           <Photocard photocard={photocard} currentUser={user} />
         </div>
         <div className="meta-info">
-          {photocard.photocardNumber && (
-            <p className="photocard-number">
-              <strong># {photocard.photocardNumber}</strong>
-            </p>
-          )}
           {photocard.photocardNumber && (
             <p className="photocard-number">
               <strong>
@@ -164,19 +194,6 @@ const AdminPhotocardItem = memo(function AdminPhotocardItem({
           </button>
         )}
         {renderActions()}
-        {photocard.flagged && onViewReport && (
-          <button
-            className="action-button view-report-button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onViewReport(photocard._id, "photocard");
-            }}
-            title="View latest report details for this photocard."
-            disabled={isProcessingAction}
-          >
-            <FontAwesomeIcon icon={faFlag} /> View Report
-          </button>
-        )}
       </div>
     </div>
   );
@@ -187,6 +204,7 @@ AdminPhotocardItem.propTypes = {
   user: PropTypes.object.isRequired,
   onPhotocardClick: PropTypes.func.isRequired,
   onBlock: PropTypes.func.isRequired,
+  onUnblock: PropTypes.func.isRequired,
   onRestore: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
   onViewReport: PropTypes.func,

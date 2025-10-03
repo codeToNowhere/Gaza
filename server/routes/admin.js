@@ -21,6 +21,7 @@ router.get(
   photocardController.getDuplicatePhotocards
 );
 router.get("/photocards/deleted", photocardController.getDeletedPhotocards);
+router.get("/photocards/flagged", photocardController.getFlaggedPhotocard);
 
 router.put("/photocards/:id/block", photocardController.blockPhotocard);
 router.put("/photocards/:id/unblock", photocardController.unblockPhotocard);
@@ -49,6 +50,10 @@ router.put(
 router.put(
   "/photocards/:id/restore",
   photocardController.restoreDeletedPhotocard
+);
+router.delete(
+  "/photocards/:id/soft-delete",
+  photocardController.softDeletePhotocardByAdmin
 );
 router.delete(
   "/photocards/:id",

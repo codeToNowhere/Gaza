@@ -4,6 +4,7 @@ import PropTypes from "prop-types";
 import { apiClient } from "../context/AuthContext";
 import { useMessage } from "../context/MessageContext";
 import Spinner from "../components/Spinner";
+import { formatAgeDisplay } from "../utils/formDataUtils";
 import {
   getStatusLabel,
   getBorderClass,
@@ -99,7 +100,7 @@ const BioDisplayModal = ({ isOpen, onClose, photocardId, isAdmin }) => {
             )}
             <p>
               <strong>Age: </strong>
-              {photocard.age}
+              {formatAgeDisplay(photocard.age, photocard.months)}
             </p>
             <p>
               <strong>Bio:</strong>

@@ -5,6 +5,7 @@
   background-color: #000;
   display: flex;
   justify-content: space-between;
+  margin-top: 0;
   padding: 1rem 2rem;
   position: relative;
   z-index: 100;
@@ -41,6 +42,7 @@
   color: #fff;
   font-size: 1.05rem;
   font-weight: bolder;
+  margin-left: 1rem;
   padding: 0.4rem 0.8rem;
   white-space: nowrap;
 }
@@ -64,18 +66,18 @@
 
 /* Login Button */
 .navbar-login-button {
-  background-color: #4caf50;
+  background-color: #006233;
 }
 .navbar-login-button:hover {
-  background-color: #45a049;
+  background-color: #008753;
 }
 
 /* Logout Button */
 .navbar-logout-button {
-  background-color: #810a0a;
+  background-color: #ce1126;
 }
 .navbar-logout-button:hover {
-  background-color: #b0362b;
+  background-color: #810a0a;
 }
 
 /* Hamburger Menu Icon (hidden by default) */
@@ -91,7 +93,7 @@
 
 /* Mobile Navigation Menu (hidden by default) */
 .mobile-nav-menu {
-  background-color: #2c3e50;
+  background-color: #1a1a1a;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   display: none;
   flex-direction: column;

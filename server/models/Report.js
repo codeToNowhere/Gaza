@@ -1,5 +1,3 @@
-//Report.js
-
 const mongoose = require("mongoose");
 
 const ReportSchema = new mongoose.Schema(
@@ -25,7 +23,13 @@ const ReportSchema = new mongoose.Schema(
       enum: ["duplicate", "inappropriate", "misleading", "other"],
       required: true,
     },
-    reason: { type: String, required: true, trim: true },
+    reason: {
+      type: String,
+      required: function () {
+        return this.reasonType !== "duplicate";
+      },
+      trim: true,
+    },
     duplicateOf: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "PhotoCard",
@@ -60,6 +64,11 @@ ReportSchema.pre("save", function (next) {
   if (this.reportType === "user" && this.photocard) {
     this.photocard = undefined;
   }
+
+  if (this.reasonType === "duplicate" && !this.reason) {
+    this.reason = "User reported as duplicate";
+  }
+
   next();
 });
 

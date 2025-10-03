@@ -32,7 +32,7 @@
 /* Individual photocard item within the grid */
 .my-photocards-item {
   align-items: center;
-  background-color: #2c3e50;
+  background-color: #efefef;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -54,7 +54,7 @@
 
 /* Actions area below photo */
 .my-photocards-actions {
-  background-color: #2c3e50;
+  background-color: #efefef;
   border-top: 1px solid #eee;
   display: flex;
   flex-direction: column;
@@ -68,7 +68,7 @@
 .my-photocards-actions button {
   align-items: center;
   border-radius: 5px;
-  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
   cursor: pointer;
   display: flex;
   font-weight: bold;
@@ -82,23 +82,23 @@
 
 /* Edit button styling */
 .my-photocards-actions .edit-button {
-  background-color: #007bff;
+  background-color: #00a859;
   color: #fff;
 }
 
 .my-photocards-actions .edit-button:hover {
-  background-color: #0056b3;
+  background-color: #008753;
   transform: translateY(-1px);
 }
 
 /* Delete button styling */
 .my-photocards-actions .delete-button {
-  background-color: #dc3545;
+  background-color: #ce1126;
   color: #fff;
 }
 
 .my-photocards-actions .delete-button:hover {
-  background-color: #c82333;
+  background-color: #8b0000;
   transform: translateY(-1px);
 }
 

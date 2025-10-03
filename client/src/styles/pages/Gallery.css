@@ -1,12 +1,6 @@
 /* Gallery.css */
-/* General Gallery Layout */
-.gallery-page {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  width: 100%;
-}
 
+/* === GENERAL GALLERY LAYOUT === */
 .gallery-container {
   box-sizing: border-box;
   display: grid;
@@ -17,6 +11,14 @@
   width: 100%;
 }
 
+.gallery-page {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  width: 100%;
+}
+
+/* === TYPOGRAPHY === */
 .end-of-gallery {
   color: #777;
   font-size: 1.1rem;
@@ -24,7 +26,11 @@
   text-align: center;
 }
 
-/* --- Title --- */
+.subtitle {
+  color: #810a0a;
+  font-size: 2.5rem;
+}
+
 .title-base {
   font-family: "Poppins", sans-serif;
   font-weight: 700;
@@ -33,18 +39,16 @@
   text-align: center;
   text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
 }
-.title {
-  color: #333;
-  font-size: 4rem;
+
+.title-img {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30em;
+  margin: 1rem auto;
 }
 
-/* --- Subtitle --- */
-.subtitle {
-  color: #810a0a;
-  font-size: 2.5rem;
-}
-
-/* --- Gallery Controls Container (Filter, Search, Counts) --- */
+/* === GALLERY CONTROLS === */
 .gallery-controls-container {
   align-items: center;
   display: flex;
@@ -56,31 +60,6 @@
   padding: 0 2rem;
 }
 
-/* Search Input */
-.search-input {
-  background-color: #fff;
-  border-radius: 25px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-  color: #333;
-  flex-grow: 1;
-  font-size: 1rem;
-  max-width: 400px;
-  padding: 10px 16px;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.search-input::placeholder {
-  color: #888;
-}
-
-.search-input:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3);
-  outline: none;
-}
-
-/* Counts Display */
 .photocard-counts {
   color: #555;
   display: flex;
@@ -99,13 +78,93 @@
 }
 
 .photocard-counts .count-value {
-  color: #007bff;
+  color: #810a0a;
   font-weight: bold;
   margin-left: 5px;
 }
 
-/* --- RESPONSIVE ADJUSTMENTS --- */
+/* === SEARCH COMPONENTS === */
+.search-container {
+  margin-bottom: 1rem;
+  position: relative;
+}
 
+.search-input {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  box-sizing: border-box;
+  color: #333;
+  flex-grow: 1;
+  font-size: 1rem;
+  max-width: 400px;
+  padding: 10px 16px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  width: 300px;
+}
+
+.search-input::placeholder {
+  color: #888;
+}
+
+.search-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3);
+  outline: none;
+}
+
+.search-input-wrapper {
+  display: inline-block;
+  position: relative;
+}
+
+.search-clear-btn {
+  align-items: center;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  font-size: 1.2rem;
+  height: 20px;
+  justify-content: center;
+  padding: 0;
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+}
+
+.search-clear-btn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.search-info {
+  align-items: center;
+  color: #666;
+  display: flex;
+  font-size: 0.9rem;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.search-reset-btn {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: underline;
+}
+
+.search-reset-btn:hover {
+  color: #0056b3;
+}
+
+/* === RESPONSIVE DESIGN === */
 @media (max-width: 900px) {
   .gallery-controls-container {
     align-items: stretch;
@@ -114,8 +173,8 @@
     padding: 0 1.5rem;
   }
 
-  .search-input,
-  .photocard-counts {
+  .photocard-counts,
+  .search-input {
     box-sizing: border-box;
     width: 100%;
   }
@@ -125,16 +184,27 @@
     margin-top: 0.5rem;
   }
 
-  .title {
-    font-size: 3.5rem;
+  .title-img {
+    width: 15em;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-info {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .search-input {
+    width: 100%;
   }
 }
 
 @media (max-width: 600px) {
-  .title {
-    font-size: 2.5rem;
-    margin-bottom: 1.5rem;
-    margin-top: 1.5rem;
+  .gallery-container {
+    gap: 1.5rem;
+    padding: 0.5rem;
   }
 
   .gallery-controls-container {
@@ -142,94 +212,19 @@
     padding: 0 1rem;
   }
 
-  .search-input {
-    font-size: 0.9rem;
-    padding: 8px 12px;
-  }
-
   .photocard-counts {
     font-size: 0.85em;
     gap: 8px;
   }
 
-  .gallery-container {
-    gap: 1.5rem;
-    padding: 0.5rem;
-  }
-}
-
-/* Search container styles */
-.search-container {
-  position: relative;
-  margin-bottom: 1rem;
-}
-
-.search-input-wrapper {
-  position: relative;
-  display: inline-block;
-}
-
-.search-input {
-  padding: 0.5rem 2rem 0.5rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  width: 300px;
-}
-
-.search-clear-btn {
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  color: #666;
-  padding: 0;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.search-clear-btn:hover {
-  color: #333;
-  background: #f0f0f0;
-  border-radius: 50%;
-}
-
-.search-info {
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-  color: #666;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.search-reset-btn {
-  background: none;
-  border: none;
-  color: #007bff;
-  cursor: pointer;
-  text-decoration: underline;
-  font-size: 0.9rem;
-}
-
-.search-reset-btn:hover {
-  color: #0056b3;
-}
-
-@media (max-width: 768px) {
   .search-input {
-    width: 100%;
+    font-size: 0.9rem;
+    padding: 8px 12px;
   }
 
-  .search-info {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+  .title {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    margin-top: 1.5rem;
   }
 }

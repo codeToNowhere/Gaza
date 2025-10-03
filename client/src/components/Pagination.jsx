@@ -94,7 +94,7 @@ const Pagination = ({ pagination, onPageChange }) => {
       </div>
 
       <button
-        className="pagniation-btn"
+        className="pagination-btn"
         onClick={() => handlePageClick(currentPage + 1)}
         disabled={!hasNextPage}
         aria-label="Next page"

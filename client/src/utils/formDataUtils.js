@@ -70,6 +70,25 @@ export const handlePhotocardFormChange =
     }
   };
 
+export const formatAgeDisplay = (age, months) => {
+  if (!age && age !== 0) return "";
+
+  const ageNum = parseInt(age);
+
+  // If age is 0 or not a number, return empty
+  if (isNaN(ageNum) || ageNum === 0) return "";
+
+  if (ageNum >= 3) {
+    return `${ageNum}`;
+  }
+
+  if (months && months !== "") {
+    return `${ageNum} years ${months} months`;
+  }
+
+  return `${ageNum} years`;
+};
+
 export const validatePhotocardForm = (formData) => {
   const errors = {};
 

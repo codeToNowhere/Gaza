@@ -40,7 +40,7 @@
 /* --- Controls & UI Elements --- */
 
 .cropper-title {
-  color: #0056b3;
+  color: #1a1a1a;
   font-size: 1.25rem;
   margin-bottom: 0.75rem;
   text-align: center;
@@ -68,11 +68,11 @@
 }
 
 .btn.cancel {
-  background-color: #c44033;
+  background-color: #ce1126;
   color: #fff;
 }
 
 .btn.done {
-  background-color: #4caf50;
+  background-color: #006233;
   color: #fff;
 }

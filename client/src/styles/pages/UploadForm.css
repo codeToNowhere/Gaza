@@ -131,7 +131,7 @@
 /* --- General Form Buttons (e.g. Submit) --- */
 .upload-form button[type="submit"] {
   align-items: center;
-  background-color: #007bff;
+  background-color: #006233;
   border-radius: 5px;
   border: none;
   color: #fff;
@@ -154,7 +154,7 @@
 }
 
 .upload-form button[type="submit"]:not(:disabled):hover {
-  background-color: #0056b3;
+  background-color: #008753;
   transform: translateY(-2px);
 }
 
@@ -170,8 +170,8 @@
 .condition-button {
   background-color: #fff;
   border-radius: 5px;
-  border: 1px solid #007bff;
-  color: #007bff;
+  border: 1px solid #555;
+  color: #555;
   cursor: pointer;
   flex-basis: auto;
   font-size: 1rem;
@@ -185,14 +185,14 @@
 .condition-button:hover:not(:disabled),
 .condition-button:focus:not(:disabled) {
   background-color: #e6f2ff;
-  border-color: #0056b3;
+  border-color: #1a1a1a;
   outline: none;
 }
 
 /* Selected State */
 .condition-button.selected {
-  background-color: #007bff;
-  border-color: #007bff;
+  background-color: #1a1a1a;
+  border-color: #1a1a1a;
   box-shadow: 0 2px 5px rgba(0, 123, 255, 0.25);
   color: #fff;
 }
@@ -200,8 +200,8 @@
 /* Hover/Focus for SELECTED buttons */
 .condition-button.selected:hover:not(:disabled),
 .condition-button.selected:focus:not(:disabled) {
-  background-color: #0056b3;
-  border-color: #0056b3;
+  background-color: #333;
+  border-color: #555;
   box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
   transform: translateY(-1px);
 }

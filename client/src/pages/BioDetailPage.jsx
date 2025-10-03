@@ -14,13 +14,14 @@ import BioDisplayModal from "../modals/BioDisplayModal";
 import IdentifyPersonModal from "../modals/IdentifyPersonModal";
 import ReportModal from "../modals/ReportModal";
 // Utilities
+import { formatAgeDisplay } from "../utils/formDataUtils";
+import { getErrorMessage } from "../utils/getErrorMessage";
 import {
   applyFilters,
   getStatusLabel,
   getBorderClass,
   getPhotocardImageSrc,
 } from "../utils/photocardUtils";
-import { getErrorMessage } from "../utils/getErrorMessage";
 // Styles & Icons
 import "../styles/pages/BioDetailPage.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -491,17 +492,10 @@ const BioDetailPage = () => {
         <p>
           <strong>Condition: </strong> {photocard.condition || "Not specified"}
         </p>
-        {photocard.age ? (
-          <p>
-            <strong>Age: </strong>
-            {photocard.age} years
-          </p>
-        ) : (
-          <p>
-            <strong>Age: </strong>
-            {photocard.months} months
-          </p>
-        )}
+        <p>
+          <strong>Age: </strong>
+          {formatAgeDisplay(photocard.age, photocard.months)}
+        </p>
         <p>
           <strong>Bio:</strong>
         </p>

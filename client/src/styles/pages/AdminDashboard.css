@@ -1,7 +1,8 @@
 /* AdminDashboard.css */
-/* General Layout & Typography */
+
+/* === GENERAL LAYOUT & TYPOGRAPHY === */
 .admin-dashboard {
-  background-color: #2c3e50;
+  background-color: #556b2f;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   color: #f0f0f0;
@@ -30,7 +31,7 @@
   padding-bottom: 10px;
 }
 
-/* Loading & Error States */
+/* === LOADING & ERROR STATES === */
 .admin-dashboard.loading,
 .admin-dashboard.error {
   color: whitesmoke;
@@ -43,7 +44,48 @@
   color: red;
 }
 
-/* Tab Navigation */
+/* === DASHBOARD SUMMARY === */
+.admin-counts-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-around;
+  margin-bottom: 30px;
+}
+
+.count-card {
+  background-color: #556b2f;
+  border: 1px solid #f5f5f5;
+  border-radius: 8px;
+  flex: 1;
+  max-width: 300px;
+  min-width: 200px;
+  padding: 20px;
+  text-align: center;
+}
+
+.count-card h3,
+.count-card p,
+.count-card strong {
+  color: #f5f5f5;
+}
+
+.count-card h3 {
+  font-size: 1.3em;
+  margin-bottom: 15px;
+  margin-top: 0;
+}
+
+.count-card p {
+  font-size: 1em;
+  margin: 8px 0;
+}
+
+.count-card strong {
+  font-size: 1.2em;
+}
+
+/* === TAB NAVIGATION === */
 .admin-tabs {
   border-bottom: 2px solid #ddd;
   display: flex;
@@ -55,8 +97,8 @@
 
 .tab-button {
   background-color: #e9ecef;
-  border-radius: 5px 5px 0 0;
   border: 1px solid #ced4da;
+  border-radius: 5px 5px 0 0;
   color: #495057;
   cursor: pointer;
   flex-grow: 1;
@@ -74,14 +116,40 @@
 }
 
 .tab-button.active {
-  background-color: #007bff;
-  border-color: #007bff;
+  background-color: #800020;
+  border-color: #800020;
   box-shadow: 0 -2px 5px rgba(0, 123, 255, 0.2);
   color: #fff;
 }
 
-/* Photocard Specific Styles */
+/* === FILTER CONTROLS === */
+.filter-controls {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 25px;
+  padding: 15px;
+}
+
+.filter-label {
+  align-items: center;
+  color: #555;
+  cursor: pointer;
+  display: flex;
+  font-size: 1em;
+}
+
+.filter-label input[type="radio"] {
+  margin-right: 8px;
+}
+
+/* === PHOTOCARD STYLES === */
 .photocard-list {
+  color: #000;
   display: grid;
   gap: 2rem;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -92,8 +160,8 @@
 .admin-photocard-item {
   align-items: center;
   background-color: #e0e0e0;
-  border-radius: 8px;
   border: 1px solid #ccc;
+  border-radius: 8px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -107,16 +175,16 @@
   transform: translateY(-5px);
 }
 
-.admin-photocard-item .photocard-number {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #2c5aa0;
-  margin-bottom: 0.5rem;
-}
-
 .admin-photocard-item.deleted .photocard-number {
   color: #666;
   text-decoration: line-through;
+}
+
+.admin-photocard-item .photocard-number {
+  color: #000;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
 }
 
 .photocard-click-area {
@@ -140,7 +208,7 @@
   width: 100%;
 }
 
-/* User Specific Styles */
+/* === USER STYLES === */
 .user-list {
   display: grid;
   gap: 20px;
@@ -151,8 +219,8 @@
 .user-item {
   align-items: center;
   background-color: #fefefe;
-  border-radius: 8px;
   border: 1px solid #ddd;
+  border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
@@ -195,11 +263,11 @@
   width: 100%;
 }
 
-/* Action Buttons & Tags */
+/* === ACTION BUTTONS & TAGS === */
 .action-button {
   align-items: center;
-  border-radius: 5px;
   border: none;
+  border-radius: 5px;
   color: #fff;
   cursor: pointer;
   display: flex;
@@ -217,44 +285,19 @@
   cursor: not-allowed;
 }
 
-.block-button {
-  background-color: #ffc107;
-}
-
-.block-button:hover:not(:disabled) {
-  background-color: #e0a800;
-}
-
-.unblock-button {
-  background-color: #28a745;
-}
-
-.unblock-button:hover:not(:disabled) {
-  background-color: #218838;
-}
-
-.delete-button {
-  background-color: #dc3545;
-}
-
-.delete-button:hover:not(:disabled) {
-  background-color: #c82333;
-}
-
-.admin-tag {
-  background-color: #007bff;
-  border-radius: 5px;
-  color: #fff;
-  font-size: 0.8em;
-  font-weight: bold;
-  padding: 5px 10px;
-  text-align: center;
-}
-
-.blocked-user-tag {
-  color: #dc3545;
-  font-weight: bold;
-  margin-left: 5px;
+.action-button[title]:hover:after {
+  background: #333;
+  border-radius: 4px;
+  bottom: 100%;
+  color: white;
+  content: attr(title);
+  font-size: 0.8rem;
+  left: 50%;
+  padding: 0.5rem;
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  z-index: 1000;
 }
 
 .action-button.view-duplicates-button {
@@ -274,97 +317,133 @@
   background-color: #0056b3;
 }
 
-/* Dashboard Summary */
-.admin-counts-summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: space-around;
-  margin-bottom: 30px;
+.block-button,
+.unblock-button {
+  background-color: #ffc107;
 }
 
-.count-card {
-  background-color: #2c3e50;
-  border-radius: 8px;
-  border: 1px solid #f5f5f5;
-  flex: 1;
-  max-width: 300px;
-  min-width: 200px;
-  padding: 20px;
+.block-button:hover:not(:disabled) {
+  background-color: #e0a800;
+}
+
+.delete-button {
+  background-color: #dc3545;
+}
+
+.delete-button:hover:not(:disabled) {
+  background-color: #c82333;
+}
+
+.unflag-button,
+.restore-button {
+  background-color: #28a745;
+}
+
+.unflag-button.disabled {
+  background-color: #6c757d !important;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.unflag-button.disabled:hover {
+  background-color: #6c757d !important;
+  transform: none !important;
+}
+
+.unflag-button:hover:not(:disabled),
+.restore-button:hover {
+  background-color: #218838;
+}
+
+/* === TAGS === */
+.admin-tag {
+  background-color: #007bff;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 0.8em;
+  font-weight: bold;
+  padding: 5px 10px;
   text-align: center;
 }
 
-.count-card h3,
-.count-card p,
-.count-card strong {
-  color: #f5f5f5;
+.blocked-user-tag {
+  color: #dc3545;
+  font-weight: bold;
+  margin-left: 5px;
 }
 
-.count-card h3 {
-  font-size: 1.3em;
-  margin-bottom: 15px;
-  margin-top: 0;
-}
-
-.count-card p {
-  font-size: 1em;
-  margin: 8px 0;
-}
-
-.count-card strong {
-  font-size: 1.2em;
-}
-
-/* Filter Controls */
-.filter-controls {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+/* === VERIFICATIONS === */
+.verifications-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
-  margin-bottom: 25px;
-  padding: 15px;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.filter-label {
+.verification-item {
   align-items: center;
-  color: #555;
-  cursor: pointer;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  color: #000;
   display: flex;
-  font-size: 1em;
+  justify-content: space-between;
+  padding: 1rem;
 }
 
-.filter-label input[type="radio"] {
-  margin-right: 8px;
+.verification-info h4 {
+  color: #000;
+  margin: 0 0 0.5rem 0;
 }
 
-/* Responsive Adjustments */
+.review-button {
+  background: #800020;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+}
+
+.review-button:hover:not(:disabled) {
+  background: #ce1126;
+}
+
+.review-button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+/* === RESPONSIVE DESIGN === */
 @media (max-width: 992px) {
   .admin-dashboard {
     padding: 1rem;
   }
+
   .admin-dashboard h1 {
     font-size: 2.2rem;
   }
+
   .admin-dashboard h2 {
     font-size: 1.6rem;
   }
-  .tab-button {
-    font-size: 0.95em;
-    max-width: none;
-    padding: 8px 15px;
-  }
+
   .filter-controls {
     flex-direction: column;
     gap: 10px;
     padding: 10px;
   }
+
   .photocard-list {
     gap: 1.5rem;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
+
+  .tab-button {
+    font-size: 0.95em;
+    max-width: none;
+    padding: 8px 15px;
+  }
+
   .user-list {
     gap: 15px;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -376,46 +455,56 @@
     margin: 10px auto;
     padding: 0.8rem;
   }
+
   .admin-dashboard h1 {
     font-size: 2rem;
     margin-bottom: 20px;
   }
+
   .admin-dashboard h2 {
     font-size: 1.5rem;
     margin-bottom: 15px;
     margin-top: 20px;
   }
+
   .admin-tabs {
     flex-direction: column;
     gap: 5px;
   }
+
+  .action-button {
+    width: 100%;
+  }
+
+  .filter-controls {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .photocard-list {
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+
   .tab-button {
     border-radius: 5px;
     margin: 0;
     width: 100%;
   }
-  .filter-controls {
-    gap: 8px;
-    padding: 8px;
-  }
-  .photocard-list {
-    gap: 1rem;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  }
-  .user-list {
-    gap: 10px;
-    grid-template-columns: 1fr;
-  }
-  .user-item {
-    padding: 15px;
-    min-height: auto;
-  }
+
   .user-actions {
     align-items: stretch;
     flex-direction: column;
   }
-  .action-button {
-    width: 100%;
+
+  .user-item {
+    min-height: auto;
+    padding: 15px;
+  }
+
+  .user-list {
+    gap: 10px;
+    grid-template-columns: 1fr;
   }
 }
 
@@ -424,79 +513,47 @@
     margin: 5px auto;
     padding: 0.5rem;
   }
+
   .admin-dashboard h1 {
     font-size: 1.8rem;
     margin-bottom: 15px;
   }
+
   .admin-dashboard h2 {
     font-size: 1.3rem;
     margin-bottom: 10px;
     margin-top: 15px;
   }
-  .tab-button {
-    font-size: 0.9em;
-    padding: 8px 10px;
-  }
-  .filter-label {
-    font-size: 0.9em;
-  }
-  .photocard-list {
-    gap: 0.8rem;
-    grid-template-columns: 1fr;
-  }
-  .admin-photocard-item {
-    padding: 0.5rem;
-    width: 100%;
-  }
-  .user-info h3 {
-    font-size: 1.1em;
-  }
-  .user-info p {
-    font-size: 0.9em;
-  }
+
   .action-button {
     font-size: 0.85em;
     padding: 6px 10px;
   }
-}
 
-/* Add to AdminDashboard.css */
-.verifications-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
+  .admin-photocard-item {
+    padding: 0.5rem;
+    width: 100%;
+  }
 
-.verification-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #f9f9f9;
-  color: #000;
-}
+  .filter-label {
+    font-size: 0.9em;
+  }
 
-.verification-info h4 {
-  margin: 0 0 0.5rem 0;
-  color: #000;
-}
+  .photocard-list {
+    gap: 0.8rem;
+    grid-template-columns: 1fr;
+  }
 
-.review-button {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
+  .tab-button {
+    font-size: 0.9em;
+    padding: 8px 10px;
+  }
 
-.review-button:hover:not(:disabled) {
-  background: #0056b3;
-}
+  .user-info h3 {
+    font-size: 1.1em;
+  }
 
-.review-button:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
+  .user-info p {
+    font-size: 0.9em;
+  }
 }

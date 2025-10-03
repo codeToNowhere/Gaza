@@ -34,7 +34,7 @@
 
 /* Dropdown Toggle Button */
 .dropdown-toggle {
-  background-color: #007bff;
+  background-color: #006233;
   border-radius: 4px;
   border: none;
   color: #fff;
@@ -45,7 +45,7 @@
 }
 
 .dropdown-toggle:hover {
-  background-color: #0056b3;
+  background-color: #008753;
 }
 
 /* Dropdown Labels - Base Style */
@@ -58,7 +58,11 @@
 }
 
 .dropdown input[type="checkbox"] {
-  accent-color: #007bff;
+  accent-color: #00a859;
+}
+
+.dropdown input[type="radio"] {
+  accent-color: #ce1126;
 }
 
 .dropdown-divider {

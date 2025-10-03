@@ -168,9 +168,10 @@ const Gallery = ({
   // --- RENDER ---
   return (
     <section className="gallery-page" aria-labelledby="gallery-title">
-      <h1 id="gallery-title" className="title-base title">
-        TITLE
-      </h1>
+      <div className="title-img">
+        <img src="/AidGaza1.png" alt="Palestine" className="title-img" />
+      </div>
+
       <h2 id="gallery-subtitle" className="title-base subtitle">
         Gallery
       </h2>

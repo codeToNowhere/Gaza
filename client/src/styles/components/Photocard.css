@@ -69,13 +69,13 @@
 
 /* Border color classes (from photoStatus.js) */
 .border-injured {
-  border-color: #006400;
+  border-color: #006233;
 }
 .border-deceased {
   border-color: #000000;
 }
 .border-missing {
-  border-color: #ff0000;
+  border-color: #ce1126;
 }
 
 /* Status label  */
@@ -95,13 +95,13 @@
 
 /* Background color classes for the photo label (from photoStatus.js)*/
 .label-injured {
-  background-color: #006400;
+  background-color: #006233;
 }
 .label-deceased {
   background-color: #000000;
 }
 .label-missing {
-  background-color: #ff0000;
+  background-color: #ce1126;
 }
 
 /* --- Other UI Elements --- */
@@ -117,7 +117,7 @@
 .photocard-name {
   align-items: center;
   box-sizing: border-box;
-  color: #333;
+  color: #1a1a1a;
   display: flex;
   flex-grow: 1;
   font-size: 1rem;

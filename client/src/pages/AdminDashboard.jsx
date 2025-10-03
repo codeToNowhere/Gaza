@@ -28,10 +28,13 @@ const AdminDashboard = memo(function AdminDashboard() {
   const { openMessage, openConfirm } = useMessage();
 
   // --- STATE MANAGEMENT ---
-  const [photocards, setPhotocards] = useState([]);
-  const [deletedPhotocards, setDeletedPhotocards] = useState([]);
+  const [allPhotocards, setAllPhotocards] = useState({
+    flagged: [],
+    blocked: [],
+    deleted: [],
+    duplicates: [],
+  });
   const [users, setUsers] = useState([]);
-  const [duplicatePhotocards, setDuplicatePhotocards] = useState([]);
   const [verifications, setVerifications] = useState([]);
 
   const [loading, setLoading] = useState(true);
@@ -46,6 +49,7 @@ const AdminDashboard = memo(function AdminDashboard() {
   const [selectedReportUserId, setSelectedReportUserId] = useState(null);
   const [selectedReportPhotocardId, setSelectedReportPhotocardId] =
     useState(null);
+  const [selectedDeletionReport, setSelectedDeletionReport] = useState(null);
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [duplicatePhotocardInfo, setDuplicatePhotocardInfo] = useState(null);
   const [isIdentificationReviewModalOpen, setIsIdentificationReviewModalOpen] =
@@ -72,11 +76,10 @@ const AdminDashboard = memo(function AdminDashboard() {
       const response = await apiClient.get("/admin/photocards/counts");
       setPhotocardCounts(response.data.counts);
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          err.message ||
-          "Failed to load photocard counts."
-      );
+      const errorMessage = `Failed to load photocard counts: ${getErrorMessage(
+        err
+      )}`;
+      setError(errorMessage);
       setPhotocardCounts({
         flagged: 0,
         blocked: 0,
@@ -85,6 +88,19 @@ const AdminDashboard = memo(function AdminDashboard() {
         unidentified: 0,
         total: 0,
       });
+    }
+  }, [setError]);
+
+  const fetchUserCounts = useCallback(async () => {
+    try {
+      const response = await apiClient.get("/admin/users/counts");
+      setUserCounts(response.data.counts);
+    } catch (err) {
+      const errorMessage = `Failed to load user counts: ${getErrorMessage(
+        err
+      )}`;
+      setError(getErrorMessage(err));
+      setUserCounts({ flagged: 0, blocked: 0, total: 0 });
     }
   }, [setError]);
 
@@ -108,89 +124,6 @@ const AdminDashboard = memo(function AdminDashboard() {
     }
   }, [user, openMessage, setError]);
 
-  const fetchPhotocards = useCallback(async () => {
-    setLoading(true);
-    let endpoint = "/admin/photocards";
-
-    if (photocardFilter !== "all") {
-      endpoint += `?status=${photocardFilter}`;
-    }
-
-    try {
-      const response = await apiClient.get(endpoint);
-      setPhotocards(
-        Array.isArray(response.data.photocards) ? response.data.photocards : []
-      );
-      setError(null);
-    } catch (err) {
-      const errorMessage = `Error fetching ${photocardFilter} photocards: ${getErrorMessage(
-        err
-      )}`;
-      openMessage("Error", errorMessage, "error");
-      setError(errorMessage);
-      setPhotocards([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [photocardFilter, openMessage, setError]);
-
-  const fetchDeletedPhotocards = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await apiClient.get("/admin/photocards/deleted");
-      setDeletedPhotocards(
-        Array.isArray(response.data.deletedPhotocards)
-          ? response.data.deletedPhotocards
-          : []
-      );
-      setError(null);
-    } catch (err) {
-      const errorMessage = `Error fetching deleted photocards: ${getErrorMessage(
-        err
-      )}`;
-      openMessage("Error", errorMessage, "error");
-      setError(errorMessage);
-      setDeletedPhotocards([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [openMessage, setError]);
-
-  // Existing fetching functions
-  const fetchUserCounts = useCallback(async () => {
-    try {
-      const response = await apiClient.get("/admin/users/counts");
-      setUserCounts(response.data.counts);
-    } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          err.message ||
-          "Failed to load user counts."
-      );
-      setUserCounts({ flagged: 0, blocked: 0, total: 0 });
-    }
-  }, [setError]);
-
-  const fetchDuplicatePhotocards = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await apiClient.get("/admin/photocards/duplicates");
-      setDuplicatePhotocards(
-        Array.isArray(response.data.photocards) ? response.data.photocards : []
-      );
-      setError(null);
-    } catch (err) {
-      const errorMessage = `Error fetching duplicate photocards: ${getErrorMessage(
-        err
-      )}`;
-      openMessage("Error", errorMessage, "error");
-      setError(errorMessage);
-      setDuplicatePhotocards([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [openMessage, setError]);
-
   const fetchVerifications = useCallback(async () => {
     setLoading(true);
     try {
@@ -213,55 +146,109 @@ const AdminDashboard = memo(function AdminDashboard() {
     }
   }, [openMessage, setError]);
 
-  const fetchDashboardData = useCallback(() => {
-    fetchPhotocardCounts();
-    fetchUserCounts();
+  const fetchAllPhotocards = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [flagged, blocked, deleted, duplicates] = await Promise.all([
+        apiClient.get("/admin/photocards?status=flagged"),
+        apiClient.get("/admin/photocards?status=blocked"),
+        apiClient.get("/admin/photocards?status=deleted"),
+        apiClient.get("/admin/photocards/duplicates"),
+      ]);
+      setAllPhotocards({
+        flagged: flagged.data.photocards,
+        blocked: blocked.data.photocards,
+        deleted: deleted.data.photocards,
+        duplicates: duplicates.data.photocards,
+      });
+      setError(null);
+    } catch (err) {
+      const errorMessage = `Error fetching photocards: ${getErrorMessage(err)}`;
+      openMessage("Error", errorMessage, "error");
+      setError(errorMessage);
+      setAllPhotocards({
+        flagged: [],
+        blocked: [],
+        deleted: [],
+        duplicates: [],
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [openMessage, setError]);
 
-    if (activeTab === "photocards") {
-      fetchPhotocards();
-    } else if (activeTab === "users") {
-      fetchUsers();
-    } else if (activeTab === "duplicates") {
-      fetchDuplicatePhotocards();
-    } else if (activeTab === "verifications") {
-      fetchVerifications();
-    } else if (activeTab === "deleted") {
-      fetchDeletedPhotocards();
+  const fetchDashboardData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Always fetch counts first
+      await fetchPhotocardCounts();
+      await fetchUserCounts();
+
+      // Fetch data based on active tab
+      if (activeTab === "photocards") {
+        // For the main photocards tab, use the status parameter approach
+        const response = await apiClient.get(
+          `/admin/photocards?status=${photocardFilter}`
+        );
+        setAllPhotocards((prev) => ({
+          ...prev,
+          [photocardFilter]: response.data.photocards || [],
+        }));
+      } else if (activeTab === "duplicates") {
+        // Use the dedicated duplicates endpoint
+        const response = await apiClient.get("/admin/photocards/duplicates");
+        setAllPhotocards((prev) => ({
+          ...prev,
+          duplicates: response.data.photocards || [],
+        }));
+      } else if (activeTab === "blocked") {
+        const response = await apiClient.get(
+          "/admin/photocards?status=blocked"
+        );
+        setAllPhotocards((prev) => ({
+          ...prev,
+          blocked: response.data.photocards || [],
+        }));
+      } else if (activeTab === "deleted") {
+        const response = await apiClient.get("/admin/photocards/deleted");
+        setAllPhotocards((prev) => ({
+          ...prev,
+          deleted: response.data.deletedPhotocards || [],
+        }));
+      } else if (activeTab === "verifications") {
+        await fetchVerifications();
+      } else if (activeTab === "users") {
+        await fetchUsers();
+      }
+    } catch (err) {
+      const errorMessage = `Error fetching admin data: ${getErrorMessage(err)}`;
+      openMessage("Error", errorMessage, "error");
+      console.error("Fetch error:", err);
+    } finally {
+      setLoading(false);
     }
   }, [
     activeTab,
-    fetchPhotocards,
-    fetchUsers,
-    fetchDuplicatePhotocards,
-    fetchVerifications,
+    photocardFilter,
     fetchPhotocardCounts,
     fetchUserCounts,
-    fetchDeletedPhotocards,
+    fetchVerifications,
+    fetchUsers,
+    openMessage,
   ]);
-
   // --- EFFECTS ---
   useEffect(() => {
     fetchDashboardData();
-  }, [fetchDashboardData]);
+  }, [fetchDashboardData, activeTab, photocardFilter]);
 
   // --- HANDLERS ---
   const handleAction = useCallback(
-    async (
-      apiCall,
-      successTitle,
-      successMessage,
-      errorMessagePrefix,
-      refreshFunctions
-    ) => {
+    async (apiCall, successTitle, successMessage, errorMessagePrefix) => {
       setIsProcessingAction(true);
       try {
         await apiCall();
         openMessage(successTitle, successMessage, "success");
-        if (Array.isArray(refreshFunctions)) {
-          refreshFunctions.forEach((func) => func());
-        } else {
-          fetchDashboardData();
-        }
+        fetchDashboardData();
       } catch (err) {
         const errorMessage = `${errorMessagePrefix}: ${getErrorMessage(err)}`;
         openMessage("Error", errorMessage, "error");
@@ -276,70 +263,58 @@ const AdminDashboard = memo(function AdminDashboard() {
   // --- Photocard Handlers ---
   const handleBlockPhotocard = useCallback(
     (photocardId) => {
-      const isCurrentlyBlocked = photocards.find(
-        (p) => p._id === photocardId
-      )?.blocked;
-      const actionType = isCurrentlyBlocked ? "UNBLOCK" : "BLOCK";
       openConfirm(
-        `${actionType} Photocard`,
-        `Are you sure you want to ${actionType.toLowerCase()} this photocard?`,
+        "Block Photocard,",
+        `Are you sure you want to BLOCK this photocard?`,
         async () => {
           await handleAction(
-            async () => {
-              if (isCurrentlyBlocked) {
-                await apiClient.put(`/admin/photocards/${photocardId}/unblock`);
-              } else {
-                await apiClient.put(`/admin/photocards/${photocardId}/block`);
-              }
-            },
+            async () => apiClient.put(`/admin/photocards/${photocardId}/block`),
             "Success",
-            `Photocard has been ${
-              isCurrentlyBlocked ? "unblocked" : "blocked"
-            }!`,
-            "Failed to update photocard block status",
-            [fetchPhotocardCounts, fetchPhotocards, fetchDuplicatePhotocards]
+            "Photocard has been blocked!",
+            "Failed to block photocard."
           );
         }
       );
     },
-    [
-      photocards,
-      fetchPhotocards,
-      fetchPhotocardCounts,
-      fetchDuplicatePhotocards,
-      openConfirm,
-      handleAction,
-    ]
+    [openConfirm, handleAction]
   );
 
-  const handleRestorePhotocard = useCallback(
+  const handleUnblockPhotocard = useCallback(
+    (photocardId) => {
+      openConfirm(
+        "Unblock Photocard",
+        `Are you sure you want to UNBLOCK this photocard?`,
+        async () => {
+          await handleAction(
+            async () =>
+              apiClient.put(`/admin/photocards/${photocardId}/unblock`),
+            "Success",
+            "Photocard has been unblocked!",
+            "Failed to unblock photocard."
+          );
+        }
+      );
+    },
+    [openConfirm, handleAction]
+  );
+
+  const handleUnflagPhotocard = useCallback(
     (photocardId) => {
       openConfirm(
         "Unflag Photocard",
         "Are you sure you want to unflag this photocard?",
         async () => {
           await handleAction(
-            async () => {
-              await apiClient.put(
-                `/admin/photocards/${photocardId}/unflag`,
-                {}
-              );
-            },
+            async () =>
+              apiClient.put(`/admin/photocards/${photocardId}/unflag`),
             "Success",
-            "Photocard unflagged successfully!",
-            "Failed to unflag photocard.",
-            [fetchPhotocards, fetchPhotocardCounts, fetchDuplicatePhotocards]
+            "Photocard unflagged successfully",
+            "Failed to unflag this photocard."
           );
         }
       );
     },
-    [
-      fetchPhotocards,
-      fetchPhotocardCounts,
-      fetchDuplicatePhotocards,
-      openConfirm,
-      handleAction,
-    ]
+    [openConfirm, handleAction]
   );
 
   const handleRestoreFromDeleted = useCallback(
@@ -354,20 +329,41 @@ const AdminDashboard = memo(function AdminDashboard() {
             },
             "Success",
             "Photocard restored successfully!",
-            "Failed to restore photocard.",
-            [fetchPhotocardCounts, fetchDeletedPhotocards]
+            "Failed to restore photocard."
           );
         }
       );
     },
-    [openConfirm, handleAction, fetchPhotocardCounts, fetchDeletedPhotocards]
+    [openConfirm, handleAction]
   );
 
-  const handleDeletePhotocard = useCallback(
+  const handleSoftDeletePhotocard = useCallback(
     (photocardId) => {
       openConfirm(
         "Delete Photocard",
-        "Are you sure you want to delete this photocard permanently? This cannot be undone!",
+        "Are you sure you want to soft delete this photocard? It will be moved to deleted items.",
+        async () => {
+          handleAction(
+            async () => {
+              await apiClient.delete(
+                `/admin/photocards/${photocardId}/soft-delete`
+              );
+            },
+            "Success",
+            "Photocard moved to deleted items",
+            "Failed to delete photocard!"
+          );
+        }
+      );
+    },
+    [openConfirm, handleAction]
+  );
+
+  const handleHardDeletePhotocard = useCallback(
+    (photocardId) => {
+      openConfirm(
+        "Delete Photocard",
+        "WARNING: This will PERMANENTLY DELETE this photocard from the database. This cannot be undone!",
         async () => {
           handleAction(
             async () => {
@@ -375,25 +371,12 @@ const AdminDashboard = memo(function AdminDashboard() {
             },
             "Success",
             "Photocard deleted successfully!",
-            "Failed to delete photocard!",
-            [
-              fetchPhotocards,
-              fetchPhotocardCounts,
-              fetchDuplicatePhotocards,
-              fetchDeletedPhotocards,
-            ]
+            "Failed to delete photocard!"
           );
         }
       );
     },
-    [
-      fetchPhotocards,
-      fetchPhotocardCounts,
-      fetchDeletedPhotocards,
-      fetchDuplicatePhotocards,
-      openConfirm,
-      handleAction,
-    ]
+    [openConfirm, handleAction]
   );
 
   const handlePhotocardClick = useCallback((photocardId) => {
@@ -406,51 +389,31 @@ const AdminDashboard = memo(function AdminDashboard() {
     setBioDisplayModalPhotoId(null);
   }, []);
 
-  const handleViewReports = useCallback(
-    async (itemId, reportType) => {
+  const handleViewReportsOrDuplicates = useCallback(
+    async (photocardId) => {
       setLoading(true);
       setError(null);
 
       try {
-        let reports;
-        let response;
-
-        // Consolidate API call for both types
-        response = await apiClient.get(
-          `/admin/reports/${itemId}?itemType=${reportType}`
+        const reportsResponse = await apiClient.get(
+          `/admin/reports/${photocardId}?itemType=photocard`
         );
-        reports = response.data.reports;
+        const reports = reportsResponse.data.reports;
+        const duplicateReport = reports.find(
+          (r) => r.reasonType === "duplicate" && r.duplicateOf._id
+        );
 
-        if (reportType === "photocard") {
-          const isDuplicateReport = reports.some(
-            (report) => report.reasonType === "duplicate"
+        if (duplicateReport) {
+          const originalPhotocardId = duplicateReport.duplicateOf._id;
+          const comparisonResponse = await apiClient.get(
+            `/admin/photocards/compare-suspected/${photocardId}/${originalPhotocardId}`
           );
-
-          if (isDuplicateReport) {
-            const duplicateReport = reports.find(
-              (report) => report.reasonType === "duplicate"
-            );
-            const originalPhotocardId = duplicateReport.duplicateOf._id;
-
-            const comparisonResponse = await apiClient.get(
-              `/admin/photocards/compare-suspected/${itemId}/${originalPhotocardId}`
-            );
-            setDuplicatePhotocardInfo(comparisonResponse.data);
-            setIsDuplicateModalOpen(true);
-          } else {
-            setSelectedReportUserId(null);
-            setSelectedReportPhotocardId(itemId);
-            setIsReportModalOpen(true);
-          }
-        } else if (reportType === "user") {
-          setSelectedReportPhotocardId(null);
-          setSelectedReportUserId(itemId);
-          setIsReportModalOpen(true);
+          setDuplicatePhotocardInfo(comparisonResponse.data);
+          setIsDuplicateModalOpen(true);
         } else {
-          throw new Error("Invalid report type provided.");
+          setSelectedReportPhotocardId(photocardId);
+          setIsReportModalOpen(true);
         }
-
-        setError(null);
       } catch (err) {
         const errorMessage = `Failed to fetch report info: ${getErrorMessage(
           err
@@ -462,15 +425,28 @@ const AdminDashboard = memo(function AdminDashboard() {
         setLoading(false);
       }
     },
-    [
-      openMessage,
-      setError,
-      setSelectedReportUserId,
-      setSelectedReportPhotocardId,
-      setIsReportModalOpen,
-      setDuplicatePhotocardInfo,
-      setIsDuplicateModalOpen,
-    ]
+    [openMessage, setError]
+  );
+
+  const handleViewDeletionReport = useCallback(
+    async (photocardId) => {
+      setLoading(true);
+      try {
+        const response = await apiClient.get(
+          `/admin/photocards/${photocardId}`
+        );
+        setSelectedDeletionReport(response.data.photocard);
+        setIsReportModalOpen(true);
+      } catch (err) {
+        const errorMessage = `Failed to fetch deletion report: ${getErrorMessage(
+          err
+        )}`;
+        openMessage("Error", errorMessage, "error");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [openMessage]
   );
 
   const handleConfirmAsDuplicate = useCallback(
@@ -550,20 +526,13 @@ const AdminDashboard = memo(function AdminDashboard() {
             },
             "Success",
             "Photocard unmarked as duplicate!",
-            "Failed to unmark photocard as duplicate.",
-            [fetchPhotocardCounts, fetchDuplicatePhotocards]
+            "Failed to unmark photocard as duplicate."
           );
           handleCloseDuplicateModal();
         }
       );
     },
-    [
-      openConfirm,
-      handleAction,
-      fetchPhotocardCounts,
-      fetchDuplicatePhotocards,
-      handleCloseDuplicateModal,
-    ]
+    [openConfirm, handleAction, handleCloseDuplicateModal]
   );
 
   const handleReviewIdentification = useCallback(
@@ -665,13 +634,12 @@ const AdminDashboard = memo(function AdminDashboard() {
             },
             "Success",
             `User "${username}" has been blocked.`,
-            "Failed to block user.",
-            [fetchUserCounts, fetchUsers]
+            "Failed to block user."
           );
         }
       );
     },
-    [fetchUsers, fetchUserCounts, openConfirm, handleAction]
+    [openConfirm, handleAction]
   );
 
   const handleUnblockUser = useCallback(
@@ -686,13 +654,12 @@ const AdminDashboard = memo(function AdminDashboard() {
             },
             "Success",
             `User "${username}" has been unblocked.`,
-            `Failed to unblock user ${username}`,
-            [fetchUserCounts, fetchUsers]
+            `Failed to unblock user ${username}`
           );
         }
       );
     },
-    [fetchUsers, fetchUserCounts, openConfirm, handleAction]
+    [openConfirm, handleAction]
   );
 
   const handleDeleteUser = useCallback(
@@ -707,13 +674,12 @@ const AdminDashboard = memo(function AdminDashboard() {
             },
             "Success",
             `User "${username}" and all their associated photocards have been deleted.`,
-            `Failed to delete user ${username}`,
-            [fetchUsers, fetchUserCounts]
+            `Failed to delete user ${username}`
           );
         }
       );
     },
-    [fetchUsers, fetchUserCounts, openConfirm, handleAction]
+    [openConfirm, handleAction]
   );
 
   // --- RENDER ---
@@ -734,6 +700,28 @@ const AdminDashboard = memo(function AdminDashboard() {
   if (error && !isBioDisplayModalOpen && !isReportModalOpen) {
     return <div className="admin-dashboard error">{error}</div>;
   }
+
+  const getCurrentPhotocardList = () => {
+    switch (activeTab) {
+      case "photocards":
+        return photocardFilter === "flagged"
+          ? allPhotocards.flagged || []
+          : allPhotocards.blocked || [];
+      case "duplicates":
+        return allPhotocards.duplicates || [];
+      case "deleted":
+        return allPhotocards.deleted || [];
+      default:
+        return [];
+    }
+  };
+
+  const currentPhotocardList = getCurrentPhotocardList();
+  const isPhotocardActive = activeTab === "photocards";
+  const isDuplicateActive = activeTab === "duplicates";
+  const isVerificationActive = activeTab === "verifications";
+  const isDeletedActive = activeTab === "deleted";
+  const isUserActive = activeTab === "users";
 
   return (
     <div className="admin-dashboard">
@@ -777,35 +765,35 @@ const AdminDashboard = memo(function AdminDashboard() {
 
       <div className="admin-tabs">
         <button
-          className={`tab-button ${activeTab === "photocards"}`}
+          className={`tab-button ${isPhotocardActive ? "active" : ""}`}
           onClick={() => setActiveTab("photocards")}
           disabled={isProcessingAction}
         >
           Manage Photocards
         </button>
         <button
-          className={`tab-button ${activeTab === "duplicates"}`}
+          className={`tab-button ${isDuplicateActive ? "active" : ""}`}
           onClick={() => setActiveTab("duplicates")}
           disabled={isProcessingAction}
         >
-          <FontAwesomeIcon icon={faClone} /> Identical Photocards
+          <FontAwesomeIcon icon={faClone} /> Duplicate Photocards
         </button>
         <button
-          className={`tab-button ${activeTab === "verifications"}`}
+          className={`tab-button ${isVerificationActive ? "active" : ""}`}
           onClick={() => setActiveTab("verifications")}
           disabled={isProcessingAction}
         >
           Verifications
         </button>
         <button
-          className={`tab-button ${activeTab === "deleted" ? "active" : ""}`}
+          className={`tab-button ${isDeletedActive ? "active" : ""}`}
           onClick={() => setActiveTab("deleted")}
           disabled={isProcessingAction}
         >
           <FontAwesomeIcon icon="trash" /> Deleted Photocards
         </button>
         <button
-          className={`tab-button ${activeTab === "users"}`}
+          className={`tab-button ${isUserActive ? "active" : ""}`}
           onClick={() => setActiveTab("users")}
           disabled={isProcessingAction}
         >
@@ -826,7 +814,7 @@ const AdminDashboard = memo(function AdminDashboard() {
                 onChange={() => setPhotocardFilter("flagged")}
                 disabled={isProcessingAction}
               />{" "}
-              <span>Flagged</span>
+              <span>Flagged ({allPhotocards.flagged?.length || 0})</span>
             </label>
             <label className="filter-label">
               <input
@@ -837,34 +825,25 @@ const AdminDashboard = memo(function AdminDashboard() {
                 onChange={() => setPhotocardFilter("blocked")}
                 disabled={isProcessingAction}
               />{" "}
-              <span>Blocked</span>
-            </label>
-            <label className="filter-label">
-              <input
-                type="radio"
-                name="photocardFilter"
-                value="both"
-                checked={photocardFilter === "both"}
-                onChange={() => setPhotocardFilter("both")}
-                disabled={isProcessingAction}
-              />{" "}
-              <span>Both</span>
+              <span>Blocked ({allPhotocards.blocked?.length || 0})</span>
             </label>
           </div>
           <div className="photocard-list">
-            {photocards?.length > 0 ? (
-              photocards.map((photocard) => (
+            {currentPhotocardList?.length > 0 ? (
+              currentPhotocardList.map((photocard) => (
                 <AdminPhotocardItem
                   key={photocard._id}
                   photocard={photocard}
                   user={user}
                   onPhotocardClick={handlePhotocardClick}
                   onBlock={handleBlockPhotocard}
-                  onRestore={handleRestorePhotocard}
-                  onDelete={handleDeletePhotocard}
-                  onViewReport={handleViewReports}
+                  onUnblock={handleUnblockPhotocard}
+                  onRestore={handleUnflagPhotocard}
+                  onDelete={handleSoftDeletePhotocard}
                   onViewDuplicates={handleViewDuplicates}
+                  onViewReport={handleViewReportsOrDuplicates}
                   isProcessingAction={isProcessingAction}
+                  isDeleted={false}
                 />
               ))
             ) : (
@@ -876,23 +855,24 @@ const AdminDashboard = memo(function AdminDashboard() {
 
       {activeTab === "duplicates" && (
         <div className="admin-section duplicates-section">
-          <h2>Identical Photocards</h2>
+          <h2>Duplicate Photocards</h2>
           <p>
             These photocards are either flagged as potential duplicates by users
             or identified as such based on shared names and details.
           </p>
           <div className="photocard-list">
-            {duplicatePhotocards?.length > 0 ? (
-              duplicatePhotocards.map((photocard) => (
+            {allPhotocards.duplicates.length > 0 ? (
+              allPhotocards.duplicates.map((photocard) => (
                 <AdminPhotocardItem
                   key={photocard._id}
                   photocard={{ ...photocard, isDuplicate: true }}
                   user={user}
                   onPhotocardClick={handlePhotocardClick}
                   onBlock={handleBlockPhotocard}
-                  onRestore={handleRestorePhotocard}
-                  onDelete={handleDeletePhotocard}
-                  onViewReport={handleViewReports}
+                  onUnblock={handleUnblockPhotocard}
+                  onRestore={handleUnflagPhotocard}
+                  onDelete={handleSoftDeletePhotocard}
+                  isDeleted={false}
                   onViewDuplicates={handleViewDuplicates}
                   isProcessingAction={isProcessingAction}
                 />
@@ -955,15 +935,16 @@ const AdminDashboard = memo(function AdminDashboard() {
             main gallery. You can restore them or delete them permanently.
           </p>
           <div className="photocard-list">
-            {deletedPhotocards?.length > 0 ? (
-              deletedPhotocards.map((photocard) => (
+            {allPhotocards.deleted.length > 0 ? (
+              allPhotocards.deleted.map((photocard) => (
                 <AdminPhotocardItem
                   key={photocard._id}
                   photocard={photocard}
                   user={user}
                   onPhotocardClick={handlePhotocardClick}
                   onRestore={handleRestoreFromDeleted}
-                  onDelete={handleDeletePhotocard}
+                  onDelete={handleHardDeletePhotocard}
+                  onViewReport={handleViewDeletionReport}
                   isProcessingAction={isProcessingAction}
                   isDeleted={true}
                 />
@@ -988,7 +969,7 @@ const AdminDashboard = memo(function AdminDashboard() {
                   onBlock={handleBlockUser}
                   onUnblock={handleUnblockUser}
                   onDelete={handleDeleteUser}
-                  onViewReport={handleViewReports}
+                  onViewReport={handleViewReportsOrDuplicates}
                   isProcessingAction={isProcessingAction}
                 />
               ))
@@ -1015,15 +996,13 @@ const AdminDashboard = memo(function AdminDashboard() {
         onClose={handleCloseReportModal}
         photocardId={selectedReportPhotocardId}
         userId={selectedReportUserId}
+        deletionReport={selectedDeletionReport}
       />
 
       <DuplicateDisplayModal
         isOpen={isDuplicateModalOpen}
         onClose={handleCloseDuplicateModal}
         duplicatePhotocardInfo={duplicatePhotocardInfo}
-        onBlock={handleBlockPhotocard}
-        onRestore={handleRestorePhotocard}
-        onDelete={handleDeletePhotocard}
         isProcessingAction={isProcessingAction}
         onConfirmDuplicate={handleConfirmAsDuplicate}
         onPhotocardClick={handlePhotocardClick}

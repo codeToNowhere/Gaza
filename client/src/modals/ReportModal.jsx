@@ -6,6 +6,7 @@ import { useMessage } from "../context/MessageContext";
 import { useModalAccessibility } from "../hooks/useModalAccessibility";
 import Spinner from "../components/Spinner";
 import { getErrorMessage } from "../utils/getErrorMessage";
+import { getPhotocardImageSrc } from "../utils/photocardUtils";
 import "../styles/modals/Modals.css";
 
 const ReportModal = ({
@@ -72,7 +73,7 @@ const ReportModal = ({
       e.preventDefault();
       setValidationError("");
 
-      if (!reason.trim()) {
+      if (reasonType !== "duplicate" && !reason.trim()) {
         setValidationError("Please provide a reason for the report.");
         return;
       }
@@ -106,7 +107,7 @@ const ReportModal = ({
               ? photocard._id
               : photocard.createdBy._id,
           reportType: reportType,
-          reason: reason,
+          reason: reason || "",
           reasonType: reasonType,
           duplicateOfId: duplicateOfId,
         };
@@ -323,7 +324,9 @@ const ReportModal = ({
 
         <div className="reason-section">
           <label htmlFor="reportReason">
-            <strong>Reason for Report</strong> (required)
+            <strong>Reason for Report</strong>
+            {reasonType !== "duplicate" && " (required)"}
+            {reasonType === "duplicate" && " (optional)"}
           </label>
           <textarea
             id="reportReason"
@@ -331,8 +334,11 @@ const ReportModal = ({
             onChange={(e) => setReason(e.target.value)}
             rows="8"
             cols="40"
-            placeholder="Please explain why you are reporting this..."
-            required
+            placeholder={
+              reasonType === "duplicate"
+                ? "Optional: Add any additional context about why you think this is a duplicate..."
+                : "Please explain why you are reporting this..."
+            }
             disabled={currentSubmissionState}
           />
           {validationError && (
@@ -349,8 +355,7 @@ const ReportModal = ({
               currentSubmissionState ||
               (reportType === "photocard" &&
                 reasonType === "duplicate" &&
-                !selectedDuplicateId) ||
-              !reason.trim()
+                !selectedDuplicateId)
             }
           >
             {" "}

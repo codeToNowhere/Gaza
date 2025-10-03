@@ -4,22 +4,25 @@ const Report = require("../models/Report");
 const User = require("../models/User");
 const AppError = require("../utils/AppError");
 const catchAsync = require("../utils/catchAsync");
-const {
-  resolvePendingReports,
-  flagReportedItem,
-} = require("../utils/reportHelpers");
+const { flagReportedItem } = require("../utils/reportHelpers");
 const { sendJsonResponse } = require("../utils/responseHelpers");
 
 const createReport = catchAsync(async (req, res, next) => {
   const { itemId, reportType, reason, reasonType, duplicateOfId } = req.body;
   const reportedBy = req.user._id;
 
-  if (!itemId || !reportType || !reason || !reasonType) {
+  if (!itemId || !reportType || !reasonType) {
     return next(
       new AppError(
-        "Please provide all required fields: itemId, reportType, reason, reasonType.",
+        "Please provide all required fields: itemId, reportType,  reasonType.",
         400
       )
+    );
+  }
+
+  if (reasonType !== "duplicate" && !reason) {
+    return next(
+      new AppError("Please provide a reason for non-duplicate reports.", 400)
     );
   }
 
@@ -52,15 +55,25 @@ const createReport = catchAsync(async (req, res, next) => {
     }
   }
 
+  if (reasonType === "duplicate" && reportType === "photocard") {
+    await PhotoCard.findByIdAndUpdate(itemId, {
+      isSuspectedDuplicate: true,
+      flagged: false,
+    });
+  }
+
   const reportData = {
     reportedBy,
     reportType,
-    reason,
+    reason: reason || "",
     reasonType,
     duplicateOf: duplicatePhotocardRef ? duplicatePhotocardRef._id : null,
   };
 
-  await flagReportedItem(reportedItemRef, reportType);
+  if (!(reasonType === "duplicate" && reportType === "photocard")) {
+    await flagReportedItem(reportedItemRef, reportType);
+  }
+
   if (reportType === "photocard") {
     reportData.photocard = reportedItemRef._id;
   } else {
